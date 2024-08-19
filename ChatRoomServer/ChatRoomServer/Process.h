@@ -26,7 +26,6 @@ public:
 		m_binder = new CFunctionProcess(func, args...);
 		if (m_binder) return 0;
 		return -1;
-		return 0;
 	}
 
 	int operator()() override {
