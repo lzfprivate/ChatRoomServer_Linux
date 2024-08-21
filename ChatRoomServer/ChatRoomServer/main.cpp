@@ -54,7 +54,7 @@ int main()
         printf("<%s> [%d] (%s)  fd:%d\n", __FILE__, __LINE__, __FUNCTION__, iRet);
         return -1;
     }
-    usleep(100);
+    usleep(100 * 1000);
    
     int fd = open("./1.txt", O_RDWR | O_APPEND | O_CREAT);
     if (fd == -1)

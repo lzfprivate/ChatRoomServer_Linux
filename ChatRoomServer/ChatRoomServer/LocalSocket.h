@@ -73,6 +73,10 @@ public:
 		}
 	}
 
+	operator int() const {
+		return m_socket;
+	}
+
 protected:
 	int		m_socket;			//套接字描述符
 	int		m_iStatus;			//0:未初始化 1:初始化完成 2:已连接 3:关闭
@@ -84,6 +88,7 @@ protected:
 class CLocalSocket : public CSockBase
 {
 public:
+	CLocalSocket();
 	CLocalSocket(int fd);
 public:
 	/// <summary>

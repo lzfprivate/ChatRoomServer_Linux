@@ -1,6 +1,14 @@
 #include "LocalSocket.h"
+#include <string.h>
 
 #define MSS 4096
+
+CLocalSocket::CLocalSocket()
+{
+    m_socket = -1;
+    m_iStatus = 0;
+    memset(&m_param, 0, sizeof(CSockParam));
+}
 
 CLocalSocket::CLocalSocket(int fd)
 {

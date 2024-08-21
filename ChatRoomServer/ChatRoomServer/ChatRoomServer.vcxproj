@@ -79,6 +79,7 @@
     <ClCompile Include="Epoll.cpp" />
     <ClCompile Include="LocalSocket.cpp" />
     <ClCompile Include="Log.cpp" />
+    <ClCompile Include="LoggerServer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Process.cpp" />
     <ClCompile Include="Thread.cpp" />
@@ -89,6 +90,7 @@
     <ClInclude Include="FuncionBase.h" />
     <ClInclude Include="LocalSocket.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="LoggerServer.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="Thread.h" />
   </ItemGroup>
