@@ -1,10 +1,29 @@
 #pragma once
 #include <stdio.h>
-#include "Buffer.h"
 #include "Log.h"
 #include "Epoll.h"
 #include "Thread.h"
 #include "LocalSocket.h"
+
+/// <summary>
+/// 本类用于封装日志服务器
+/// 类中包含CEpoll类对象指针; 用于多线程通信
+/// 类中包含CThread类; 用于等待客户端的接入和数据传输
+/// 类中包含CSockBase类指针; 用于本地通信和保存通信相关数据
+/// 类中包含FILE文件指针和文件路径; 用于保存日志到本地
+/// 
+/// 日志服务器有以下接口:
+/// 启动服务器:
+/// 打印日志(发送日志):
+/// 日志写入到本地磁盘:
+/// 关闭:
+/// 等待客户端连接和接收客户端的数据(主业务,在线程中实现)
+/// 其他:一些工具接口
+/// 
+/// </summary>
+
+
+//TODO:
 class CLoggerServer
 {
 public:
@@ -31,10 +50,8 @@ private:
 	//获取当前时间
 	CBuffer GetTimeStr();
 
-
-
 private:
-	CEpoll		m_epoll;			//
+	CEpoll		m_epoll;			//epoll
 	CThread		m_thread;			//线程
 
 	CSockBase* m_socket;			//本地通信端

@@ -1,18 +1,15 @@
 #pragma once
 #include <cstdio>
 #include <unistd.h>
-#include "FuncionBase.h"
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "FuncionBase.h"
 
 
 template <typename _FUNCTION_,typename... _ARGS_>
 class CFunctionProcess :public CFunctionBase
 {
 public:
-	//CFunctionProcess() {
-
-	//}
 	virtual ~CFunctionProcess() {
 
 	}

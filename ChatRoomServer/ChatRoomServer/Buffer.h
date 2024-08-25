@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <cstddef>
+
 class CBuffer : public std::string
 {
 public:
@@ -10,6 +11,7 @@ public:
 	CBuffer(std::string str);
 	CBuffer& operator=(const char* buf);
 	operator char* () { return (char*)c_str(); }
-	operator const char*() const { return c_str(); }
+	operator char* () const { return (char*)c_str(); }
+	operator const char*() { return c_str(); }
 };
 

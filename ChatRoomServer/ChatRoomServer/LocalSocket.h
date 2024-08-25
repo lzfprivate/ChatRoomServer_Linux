@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include "Buffer.h"
 
 enum EnSockFlag
@@ -11,7 +12,8 @@ enum EnSockFlag
 	EnNone = 0,
 	EnTCP = 1,
 	EnServer = 2,
-	EnNetwork = 4
+	EnNetwork = 4,
+	EnNonBlock = 8
 };
 
 class CSockParam 
@@ -20,7 +22,8 @@ public:
 	CSockParam();
 	CSockParam(const CSockParam& param);
 	CSockParam& operator=(const CSockParam& param);
-	CSockParam(const CBuffer& buf,short nPort = 9876);
+	CSockParam(const CBuffer& bufIP, short nPort,int attr);
+	CSockParam(const CBuffer& buf,  int attr);
 	~CSockParam();
 
 	sockaddr* addrin() {
@@ -31,6 +34,14 @@ public:
 		return (sockaddr*)&m_addrun;
 	}
 
+	operator CBuffer() {
+		return m_bufIp;
+	}
+	operator const char* () {
+		return m_bufIp.c_str();
+	}
+
+
 private:
 	sockaddr_in m_addrin;			//网络地址
 	sockaddr_un m_addrun;			//本地网络地址
@@ -38,6 +49,7 @@ private:
 	CBuffer		m_bufIp;			//如果是网络通信,为IP字符串,如果是本地通信,为本地文件
 	short		m_nPort;			//端口			
 
+	CBuffer		m_bufPath;			//本地套接字路径字符串
 
 public:
 	int		m_iAttr;			//通信的相关属性
@@ -70,6 +82,9 @@ public:
 			int fd = m_socket;
 			m_socket = -1;
 			close(fd);
+		}
+		if (!(m_param.m_iAttr & EnNetwork)) {
+			unlink(m_param);
 		}
 	}
 

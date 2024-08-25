@@ -1,11 +1,10 @@
 #include "Buffer.h"
 
-CBuffer::CBuffer()
+CBuffer::CBuffer() : std::string()
 {
-	clear();
 }
 
-CBuffer::CBuffer(size_t nSize)
+CBuffer::CBuffer(size_t nSize) : std::string()
 {
 	resize(nSize);
 }

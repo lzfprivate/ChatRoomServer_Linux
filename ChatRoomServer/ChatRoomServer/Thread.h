@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include "FuncionBase.h"
 
+
 template<typename _FUNCTION_,typename ..._ARGS_>
 class CFunction : public CFunctionBase
 {

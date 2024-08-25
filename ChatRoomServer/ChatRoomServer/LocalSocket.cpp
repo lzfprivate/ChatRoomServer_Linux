@@ -42,6 +42,7 @@ int CLocalSocket::InitSocket(const CSockParam& param)
 
 int CLocalSocket::Link(CSockBase** socket)
 {
+    if (m_iStatus == 0) return -1;
     if (m_param.m_iAttr & EnServer)
     {
         sockaddr_un addrClient;
@@ -116,9 +117,20 @@ CSockParam& CSockParam::operator=(const CSockParam& param)
     return *this;
 }
 
-CSockParam::CSockParam(const CBuffer& buf, short nPort)
+CSockParam::CSockParam(const CBuffer& bufIP, short nPort, int attr)
 {
+    m_bufIp = bufIP;
     m_nPort = nPort;
+    m_addrin.sin_addr.s_addr = inet_addr(bufIP.c_str());
+    m_addrin.sin_port = nPort;
+    m_iAttr = attr;
+}
+
+CSockParam::CSockParam(const CBuffer& buf, int attr)
+{
+    m_bufPath = buf;
+    strncpy(m_addrun.sun_path, buf, sizeof(m_addrun.sun_path) - 1);
+    m_iAttr = attr;
 }
 
 CSockParam::~CSockParam()

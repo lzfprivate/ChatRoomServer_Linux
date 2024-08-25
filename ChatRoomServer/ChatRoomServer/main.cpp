@@ -2,11 +2,22 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include "LoggerServer.h"
 #include "Process.h"
 
 
+
 int CreateLoggerServer(CProcess* proc) {
-    printf("create logger server\n");
+
+    CLoggerServer server;
+    server.Start();
+    int fd = -1;
+    
+    while (1)
+    {
+        proc->RecvFD(fd);
+        if (fd == 0) break;
+    }
     return 0;
 }
 
@@ -73,6 +84,8 @@ int main()
     const char* buf = "hello";
     write(fd, buf, 6);
     close(fd);
+
+    procLogS.SendFD(0);
 
     return 0;
 }

@@ -1,4 +1,4 @@
-//#pragma once
+#pragma once
 
 #include <functional>
 
@@ -6,7 +6,10 @@
 /// 
 /// CFunctionBase类是函数调用类
 /// </summary>
-class CFunctionBase {
+
+
+class CFunctionBase 
+{
 public:
 	virtual ~CFunctionBase() {
 
