@@ -93,3 +93,8 @@ int CThreadPool::Close()
     m_server = nullptr;
     return 0;
 }
+
+int CThreadPool::Size() const
+{
+    return m_vecThreads.size();
+}

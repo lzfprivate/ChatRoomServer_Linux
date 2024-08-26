@@ -39,6 +39,9 @@ public:
 	int DispatchTask();
 	//关闭
 	int Close();
+	//获取线程个数
+	int Size() const;
+
 
 private:
 	CEpoll		m_epoll;					
@@ -54,11 +57,23 @@ private:
 
 /// <summary>
 /// 不与业务关联的线程池
+///	核心思想:
+/// 1.将任务放入阻塞队列
+/// 2.线程池中的空闲线程去阻塞队列中获取任务执行
+/// 3.执行完成后,再去队列中获取任务执行
+/// 
+/// 特性:
+/// 任务队列
+/// 线程数量控制
+/// 线程增加和回收
+///
+/// 
 /// </summary>
 class CCommonThreadPool {
 	CCommonThreadPool();
 	~CCommonThreadPool();
 	CCommonThreadPool operator=(const CCommonThreadPool&) = delete;
 	CCommonThreadPool(const CCommonThreadPool&) = delete;
+	CCommonThreadPool(CCommonThreadPool&&) = delete;
 };
 

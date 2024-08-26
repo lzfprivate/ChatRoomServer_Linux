@@ -19,12 +19,12 @@ public:
 
 	int SetFunctionEntry(_FUNCTION_ func, _ARGS_... args)
 	{
-		m_binder = new CFunction(func, args...);
+		m_binder = new CFunction<_FUNCTION_, _ARGS_...>(func, args...);
 		if (m_binder) return 0;
 		return -1;
 	}
 
-	int operator()() {
+	virtual int operator()() override {
 		return m_binder();
 	}
 private:

@@ -76,23 +76,29 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="Buffer.cpp" />
+    <ClCompile Include="Bussiness.cpp" />
     <ClCompile Include="Epoll.cpp" />
     <ClCompile Include="LocalSocket.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="LoggerServer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PlayerServer.cpp" />
     <ClCompile Include="Process.cpp" />
+    <ClCompile Include="Server.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="Bussiness.h" />
     <ClInclude Include="Epoll.h" />
     <ClInclude Include="FuncionBase.h" />
     <ClInclude Include="LocalSocket.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="LoggerServer.h" />
+    <ClInclude Include="PlayerServer.h" />
     <ClInclude Include="Process.h" />
+    <ClInclude Include="Server.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="ThreadPool.h" />
   </ItemGroup>

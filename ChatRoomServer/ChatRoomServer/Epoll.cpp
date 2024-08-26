@@ -100,7 +100,7 @@ int CEpoll::WaitEvents(EPEVENTS& epEvents, int timeout)
 	{
 		epEvents[i] = events[i];
 	}
-	return 0;
+	return iRet;
 }
 
 int CEpoll::Close()
