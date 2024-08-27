@@ -136,3 +136,31 @@ CSockParam::CSockParam(const CBuffer& buf, int attr)
 CSockParam::~CSockParam()
 {
 }
+
+CSocket::CSocket()
+{
+}
+
+CSocket::CSocket(int fd)
+{
+}
+
+int CSocket::InitSocket(const CSockParam& param)
+{
+    return 0;
+}
+
+int CSocket::Link(CSockBase** socket)
+{
+    return 0;
+}
+
+int CSocket::Send(const CBuffer& buf)
+{
+    return 0;
+}
+
+int CSocket::Recv(CBuffer& buf)
+{
+    return 0;
+}

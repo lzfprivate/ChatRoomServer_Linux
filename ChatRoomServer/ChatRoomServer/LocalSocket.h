@@ -136,3 +136,38 @@ public:
 
 };
 
+class CSocket : public CSockBase
+{
+public:
+	CSocket();
+	CSocket(int fd);
+public:
+	/// <summary>
+	///  初始化 建立套接字 绑定 监听 
+	/// </summary>
+	/// <param name="param">网络通信相关参数</param>
+	/// <returns>0:初始化成功 1:已初始 其他:初始化失败</returns>
+	virtual int InitSocket(const CSockParam& param) override;
+	/// <summary>
+	/// 连接 
+	/// 1:服务端接收客户端连接 
+	/// 2:客户主动连接服务端
+	/// </summary>
+	/// <param name="socket">如果是客户端 参数无效
+	/// 如果是服务端,为客户端对象</param>
+	/// <returns>0:成功 其他:失败</returns>
+	virtual int Link(CSockBase** socket = nullptr) override;
+	/// <summary>
+	/// 发送 
+	/// </summary>
+	/// <param name="buf">待发送的数据</param>
+	/// <returns>0:成功 其他失败</returns>
+	virtual int Send(const CBuffer& buf) override;
+	/// <summary>
+	/// 接收数据
+	/// </summary>
+	/// <param name="buf">接收到的数据</param>
+	/// <returns>0:接收完成 1:接收失败</returns>
+	virtual int Recv(CBuffer& buf) override;
+};
+

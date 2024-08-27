@@ -43,7 +43,6 @@ int CPlayerServer::ThreadFunc()
 				if (epEvents[i].events & EPOLLERR) break;
 				if (epEvents[i].events & EPOLLIN)
 				{
-					//TODO:
 					CSockBase* client = (CSockBase*)epEvents[i].data.ptr;
 					CBuffer buffer;
 					client->Recv(buffer);
