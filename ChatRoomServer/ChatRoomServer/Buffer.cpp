@@ -14,8 +14,17 @@ CBuffer::CBuffer(const char* buf)
 	//TODO:
 }
 
+CBuffer::CBuffer(const char* buf, size_t length)
+{
+}
+
 CBuffer::CBuffer(std::string str)
 {
+}
+
+CBuffer::CBuffer(const char* begin, const char* end)
+{
+	//复制某个区间的数据
 }
 
 CBuffer& CBuffer::operator=(const char* buf)
