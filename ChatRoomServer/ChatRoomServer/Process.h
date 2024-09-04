@@ -66,12 +66,14 @@ public:
 	/// <param name="fd">通信的套接字句柄</param>
 	/// <returns>0：发送成功 其他：发送失败</returns>
 	int SendFD(int fd);
+	int SendSocket(int fd, sockaddr* addr);
 	/// <summary>
 	/// 接收通信句柄
 	/// </summary>
 	/// <param name="fd">接收到的套接字句柄</param>
 	/// <returns>0：接收成功  其他：接收失败</returns>
 	int RecvFD(int& fd);
+	int RecvSocket(int& fd,sockaddr* addr);
 
 
 private:

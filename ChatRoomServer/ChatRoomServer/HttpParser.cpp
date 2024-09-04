@@ -214,6 +214,7 @@ int CUrlParser::Parser()
     else {
         m_bufHost = addr;
     }
+    return 0;
 }
 
 CBuffer CUrlParser::operator[](const CBuffer key)
@@ -236,6 +237,11 @@ CBuffer CUrlParser::GetHost() const
 int CUrlParser::GetPort() const
 {
     return m_nPort;
+}
+
+CBuffer CUrlParser::GetUri() const
+{
+    return m_bufUri;
 }
 
 void CUrlParser::SetUrl(const CBuffer& buffer)

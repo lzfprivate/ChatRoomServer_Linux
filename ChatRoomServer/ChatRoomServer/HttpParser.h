@@ -78,6 +78,7 @@ public:
 	CBuffer GetProtocol() const;
 	CBuffer GetHost() const;
 	int GetPort() const;
+	CBuffer GetUri() const;
 	//…Ë÷√url
 	void SetUrl(const CBuffer& buffer);
 

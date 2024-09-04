@@ -104,3 +104,13 @@ int CProcess::RecvFD(int& fd)
 	fd = *(int*)CMSG_DATA(pMsg);
 	return 0;
 }
+
+int CProcess::SendSocket(int fd, sockaddr* addr)
+{
+	return 0;
+}
+
+int CProcess::RecvSocket(int& fd, sockaddr* addr)
+{
+	return 0;
+}

@@ -53,10 +53,9 @@ public:
 	//¹Ø±Õ
 	int Close();
 
+	operator int() const;
+
 private:
 	int m_epoll;						//epollÎÄ¼şÃèÊö·û
-
-
-
 };
 

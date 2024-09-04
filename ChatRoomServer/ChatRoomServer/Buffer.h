@@ -15,5 +15,6 @@ public:
 	operator char* () { return (char*)c_str(); }
 	operator char* () const { return (char*)c_str(); }
 	operator const char*() { return c_str(); }
+	operator void* () { return (void*)c_str(); }
 };
 

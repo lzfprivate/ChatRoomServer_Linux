@@ -74,10 +74,30 @@
   <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <IncludePath>$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <IncludePath>$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <IncludePath>$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="Buffer.cpp" />
-    <ClCompile Include="Bussiness.cpp" />
+    <ClCompile Include="Bussiness.cpp">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-Wno-conversion %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="MySqlClient.cpp">
+      <CAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">switch;no-deprecated-declarations;empty-body;return-type;parentheses;no-pointer-sign;no-format;uninitialized;unreachable-code;unused-function;unused-value;unused-variable;%(CAdditionalWarning)</CAdditionalWarning>
+      <CppAdditionalWarning Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">switch;no-deprecated-declarations;empty-body;return-type;parentheses;no-format;uninitialized;unreachable-code;unused-function;unused-value;unused-variable;%(CppAdditionalWarning)</CppAdditionalWarning>
+    </ClCompile>
     <ClCompile Include="Epoll.cpp" />
+    <ClCompile Include="HttpParser.cpp" />
+    <ClCompile Include="http_parser.c" />
     <ClCompile Include="LocalSocket.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="LoggerServer.cpp" />
@@ -91,11 +111,63 @@
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="Bussiness.h" />
+    <ClInclude Include="Md5Encode.h" />
+    <ClInclude Include="MySqlClient.h" />
+    <ClInclude Include="DataBase.h" />
     <ClInclude Include="Epoll.h" />
     <ClInclude Include="FuncionBase.h" />
+    <ClInclude Include="HttpParser.h" />
+    <ClInclude Include="http_parser.h" />
     <ClInclude Include="LocalSocket.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="LoggerServer.h" />
+    <ClInclude Include="mysqllib\big_endian.h" />
+    <ClInclude Include="mysqllib\binary_log_types.h" />
+    <ClInclude Include="mysqllib\byte_order_generic.h" />
+    <ClInclude Include="mysqllib\byte_order_generic_x86.h" />
+    <ClInclude Include="mysqllib\decimal.h" />
+    <ClInclude Include="mysqllib\errmsg.h" />
+    <ClInclude Include="mysqllib\keycache.h" />
+    <ClInclude Include="mysqllib\little_endian.h" />
+    <ClInclude Include="mysqllib\mysql.h" />
+    <ClInclude Include="mysqllib\mysqld_ername.h" />
+    <ClInclude Include="mysqllib\mysqld_error.h" />
+    <ClInclude Include="mysqllib\mysql_com.h" />
+    <ClInclude Include="mysqllib\mysql_com_server.h" />
+    <ClInclude Include="mysqllib\mysql_embed.h" />
+    <ClInclude Include="mysqllib\mysql_time.h" />
+    <ClInclude Include="mysqllib\mysql_version.h" />
+    <ClInclude Include="mysqllib\my_alloc.h" />
+    <ClInclude Include="mysqllib\my_byteorder.h" />
+    <ClInclude Include="mysqllib\my_command.h" />
+    <ClInclude Include="mysqllib\my_compiler.h" />
+    <ClInclude Include="mysqllib\my_config.h" />
+    <ClInclude Include="mysqllib\my_dbug.h" />
+    <ClInclude Include="mysqllib\my_dir.h" />
+    <ClInclude Include="mysqllib\my_getopt.h" />
+    <ClInclude Include="mysqllib\my_global.h" />
+    <ClInclude Include="mysqllib\my_list.h" />
+    <ClInclude Include="mysqllib\my_sys.h" />
+    <ClInclude Include="mysqllib\my_thread.h" />
+    <ClInclude Include="mysqllib\my_thread_local.h" />
+    <ClInclude Include="mysqllib\my_xml.h" />
+    <ClInclude Include="mysqllib\m_ctype.h" />
+    <ClInclude Include="mysqllib\m_string.h" />
+    <ClInclude Include="mysqllib\plugin.h" />
+    <ClInclude Include="mysqllib\plugin_audit.h" />
+    <ClInclude Include="mysqllib\plugin_ftparser.h" />
+    <ClInclude Include="mysqllib\plugin_group_replication.h" />
+    <ClInclude Include="mysqllib\plugin_keyring.h" />
+    <ClInclude Include="mysqllib\plugin_validate_password.h" />
+    <ClInclude Include="mysqllib\sql_common.h" />
+    <ClInclude Include="mysqllib\sql_state.h" />
+    <ClInclude Include="mysqllib\sslopt-case.h" />
+    <ClInclude Include="mysqllib\sslopt-longopts.h" />
+    <ClInclude Include="mysqllib\sslopt-vars.h" />
+    <ClInclude Include="mysqllib\thr_cond.h" />
+    <ClInclude Include="mysqllib\thr_mutex.h" />
+    <ClInclude Include="mysqllib\thr_rwlock.h" />
+    <ClInclude Include="mysqllib\typelib.h" />
     <ClInclude Include="PlayerServer.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="Server.h" />
@@ -104,7 +176,22 @@
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
-      <LibraryDependencies>pthread</LibraryDependencies>
+      <LibraryDependencies>pthread;dl;mysqlclient;crypto</LibraryDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <Link>
+      <LibraryDependencies>pthread;dl;mysqlclient;crypto</LibraryDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <Link>
+      <LibraryDependencies>pthread;dl;mysqlclient;crypto</LibraryDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <Link>
+      <LibraryDependencies>pthread;dl;mysqlclient;crypto</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

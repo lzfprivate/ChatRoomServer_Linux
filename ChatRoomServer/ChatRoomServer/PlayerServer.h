@@ -2,6 +2,7 @@
 #include <map>
 #include "Bussiness.h"
 #include "ThreadPool.h"
+#include "DataBase.h"
 class CPlayerServer :
     public CBussiness
 {
@@ -19,12 +20,16 @@ private:
     int ThreadFunc();
     int Conn(CSockBase* client);
     int Recv(CSockBase* client,const CBuffer& buffer);
+    //解析客户端的http请求
+    int DecodeHttpRequest(const CBuffer& request);
+    //组织数据回复
+    CBuffer MakeHttpResponse(int ret);
 
 private:
     CEpoll      m_epoll;
     CThreadPool m_pool;
     std::map<int, CSockBase*> m_mpClients;
     unsigned    m_iCount;
-
+    CDataBaseClient* m_db;
 };
 

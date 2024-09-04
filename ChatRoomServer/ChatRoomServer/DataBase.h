@@ -7,16 +7,23 @@
 #include "Buffer.h"
 
 
+enum SQL_OP {
+	SQL_INSERT = 1,
+	SQL_DELETE = 2,
+	SQL_QUERY = 4,
+	SQL_MODIFY = 8
+};
+
 /// <summary>
 /// 简单的理解:表中的属性 也就是表的列
 /// </summary>
 class _Field_ {
 public:
 	_Field_() {}
-	virtual ~_Field_()	{}
+	virtual ~_Field_() {}
 
 public:
-	virtual void Create() = 0;
+	virtual CBuffer Create() = 0;
 	//从字符串中加载
 	virtual void LoadFromStr(const CBuffer& str) = 0;
 	//表达式,用于where语句
@@ -27,7 +34,7 @@ public:
 	virtual operator const CBuffer() const = 0;
 
 	//TODO:根据需求添加
-protected:
+public:
 	//列属性
 	CBuffer m_strName;			//属性名 姓名 性别 ...
 	CBuffer m_strType;			//属性类型 int char varchar...
@@ -36,12 +43,23 @@ protected:
 	CBuffer m_strDefault;		//属性的默认值
 	CBuffer m_strCheck;			//属性的约束条件 大于0 小于0 ...
 
+	unsigned m_uCondition;		//数据库操作标识符 用于有条件的操作
+	
+
+	union
+	{
+		int Integer;
+		double Double;
+		CBuffer* String;
+	}UnValueType;
+
+
 };
 
 class _Table_;
-using PTABLE = std::shared_ptr< _Table_>;
+using PTable = std::shared_ptr< _Table_>;
 using PFIELD = std::shared_ptr<_Field_>;
-using Result = std::list<_Table_>;
+using Result = std::list<PTable>;
 using KEYVALUE = std::map<CBuffer, CBuffer>;
 using FIELDARRAY = std::vector<PFIELD>;
 using FILEDMAP = std::map<CBuffer, PFIELD>;
@@ -67,21 +85,27 @@ public:
 	virtual CBuffer Create() = 0;
 	virtual CBuffer Drop() = 0;
 	virtual CBuffer Insert(const _Table_& table) = 0;
-	virtual CBuffer Remove() = 0;
-	virtual CBuffer Query() = 0;
-	virtual CBuffer Modify() = 0;
+	virtual CBuffer Remove(const _Table_& table) = 0;
+	virtual CBuffer Query(const CBuffer& condition = "") = 0;
+	virtual CBuffer Modify(const _Table_& table) = 0;
 
 	//获取表的命名 数据库名.表名
-	virtual CBuffer FullName() const = 0;
+	virtual operator const CBuffer() const = 0;
 	//复制表
-	virtual PTABLE Copy() = 0;
+	virtual PTable Copy() const = 0;
+	//清理可使用值
+	virtual void ClearFieldUsed() = 0;
 
 
-private:
+
+public:
 	CBuffer m_strBelongDataBase;	//本表所属数据库名
 	CBuffer m_strName;				//表名
 	FIELDARRAY	m_FieldDefine	;	//用于存储结果
 	FILEDMAP	m_FieldList;		//关系映射
+
+
+	
 };
 
 /// <summary>
@@ -128,14 +152,14 @@ public:
 	//是否连接
 	virtual bool IsConnected() = 0;
 	//关闭
-	virtual void Close() = 0;
+	virtual int Close() = 0;
 };
 
 
 //表类
 #define DECLARE_CLASS(name,base) class name:public base { \
 public:\
-virtual PTABLE Copy() const{return PTABLE(new name(*this));}\
+virtual PTable Copy() const{return PTable(new name(*this));}\
 name():base(){Name = #name;}
 
 

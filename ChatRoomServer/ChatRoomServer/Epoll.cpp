@@ -110,3 +110,8 @@ int CEpoll::Close()
 	close(fd);
 	return 0;
 }
+
+CEpoll::operator int() const
+{
+	return m_epoll;
+}
