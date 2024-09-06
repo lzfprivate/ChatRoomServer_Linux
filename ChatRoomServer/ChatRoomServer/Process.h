@@ -20,7 +20,7 @@ public:
 	}
 
 	int SetFunction(_FUNCTION_ func, _ARGS_... args) {
-		m_binder = new CFunctionProcess(func, args...);
+		m_binder = new CFunctionProcess<_FUNCTION_,_ARGS_...>(func, args...);
 		if (m_binder) return 0;
 		return -1;
 	}

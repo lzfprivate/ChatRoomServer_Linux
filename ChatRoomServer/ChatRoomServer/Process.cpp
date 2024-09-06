@@ -19,89 +19,89 @@ CProcess::~CProcess()
 int CProcess::CreateSubProcess()
 {
 	if (!m_func) return -1;
-	
-	int pid = fork();
-	if (pid == -1) return -2;
-	int ret = -1;
 	//创建子线程前分离
-	ret = socketpair(AF_LOCAL,SOCK_STREAM ,0, m_pipes);
+	int ret = socketpair(AF_LOCAL, SOCK_STREAM, 0, m_pipes);
 	if (ret == -1) {
 		printf("<%s> [%d] (%s)  errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, errno, strerror(errno));
-		return -1;
+		return -2;
 	}
+	int pid = fork();
+	if (pid == -1) return -3; 
 	if (pid == 0)
-	{
+	{		
+		//子进程 关闭写功能
 		close(m_pipes[1]);
 		m_pipes[1] = 0;
-		//子进程
 		ret = (*m_func)();
 		exit(ret);
 	}
-	else {
-		close(m_pipes[0]);
-		m_pipes[0] = 0;
-		m_pid = pid;
-	}
-
+	//主进程关闭读功能
+	close(m_pipes[0]);
+	m_pipes[0] = 0;
+	m_pid = pid;
 	return 0;
 }
 
+//在主进程中调用
 int CProcess::SendFD(int fd)
 {
 	struct msghdr msg;
-
 	iovec iov[2];
-	memset(iov, 0, sizeof(iov));
-
-	char buf[2][8] = { "12345","12324" };
-
+	char buf[][10] = { "edoyun","jueding" };
 	iov[0].iov_base = buf[0];
 	iov[0].iov_len = sizeof(buf[0]);
-
 	iov[1].iov_base = buf[1];
 	iov[1].iov_len = sizeof(buf[1]);
-
 	msg.msg_iov = iov;
 	msg.msg_iovlen = 2;
-
-	cmsghdr* pMsg = (cmsghdr*)calloc(1,CMSG_LEN(sizeof(int)));
-	if (!pMsg) return -1;
-	pMsg->cmsg_len = CMSG_LEN(sizeof(int));
-	pMsg->cmsg_level = SOL_SOCKET;
-	pMsg->cmsg_type = SCM_RIGHTS;
-	*(int*)CMSG_DATA(pMsg) = fd;
-	msg.msg_control = pMsg;
-	msg.msg_controllen = pMsg->cmsg_len;
-	ssize_t iRet = sendmsg(m_pipes[1], &msg, 0);
-
-	free(pMsg);
-	if (-1 == iRet)
-	{
+	// 下面的数据，才是我们需要传递的。
+	cmsghdr* cmsg = (cmsghdr*)calloc(1,
+		CMSG_LEN(sizeof(int)));
+	if (cmsg == NULL)return -1;
+	cmsg->cmsg_len = CMSG_LEN(sizeof(int));
+	cmsg->cmsg_level = SOL_SOCKET;
+	cmsg->cmsg_type = SCM_RIGHTS;
+	*(int*)CMSG_DATA(cmsg) = fd;
+	msg.msg_control = cmsg;
+	msg.msg_controllen = cmsg->cmsg_len;
+	ssize_t ret = sendmsg(m_pipes[1], &msg,
+		0);
+	free(cmsg);
+	if (ret == -1) {
 		return -2;
 	}
 	return 0;
-	
 }
 
+//在子线程中调用
 int CProcess::RecvFD(int& fd)
 {
 	msghdr msg;
-	cmsghdr* pMsg = (cmsghdr*)calloc(1, CMSG_LEN(sizeof(int)));
-	if (!pMsg) return -1;
-	pMsg->cmsg_len = CMSG_LEN(sizeof(int));
-	pMsg->cmsg_level = SOL_SOCKET;
-	pMsg->cmsg_type = SCM_RIGHTS;
-
-	msg.msg_control = pMsg;
-	msg.msg_controllen = pMsg->cmsg_len;
-
-	ssize_t iRet = recvmsg(m_pipes[0], &msg, 0);
-	free(pMsg);
-	if (-1 == iRet)
-	{
+	iovec iov[2];
+	char buf[][10] = { "","" };
+	iov[0].iov_base = buf[0];
+	iov[0].iov_len = sizeof(buf[0]);
+	iov[1].iov_base = buf[1];
+	iov[1].iov_len = sizeof(buf[1]);
+	msg.msg_iov = iov;
+	msg.msg_iovlen = 2;
+	cmsghdr* cmsg = (cmsghdr*)calloc(1,
+		CMSG_LEN(sizeof(int)));
+	if (cmsg == NULL)return -1;
+	cmsg->cmsg_len = CMSG_LEN(sizeof(int));
+	cmsg->cmsg_level = SOL_SOCKET;
+	cmsg->cmsg_type = SCM_RIGHTS;
+	msg.msg_control = cmsg;
+	msg.msg_controllen =
+		CMSG_LEN(sizeof(int));
+	ssize_t ret = recvmsg(m_pipes[0], &msg,
+		0);
+	if (ret == -1) {
+		free(cmsg);
 		return -2;
 	}
-	fd = *(int*)CMSG_DATA(pMsg);
+	fd = *(int*)CMSG_DATA(cmsg);
+	free(cmsg);
 	return 0;
 }
 
