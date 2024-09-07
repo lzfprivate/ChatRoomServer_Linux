@@ -14,7 +14,7 @@ int CServer::Init(CBussiness* bussiness, CBuffer bufIP, short port)
 {
     //创建客户端处理进程
     m_bussiness = bussiness;
-    m_process.SetFunctionEntry(&CBussiness::BusinessProcess, m_bussiness, &m_process);
+    m_process.SetEntryFunction(&CBussiness::BusinessProcess, m_bussiness, &m_process);
     m_process.CreateSubProcess();
 
     m_pool.Start(2);

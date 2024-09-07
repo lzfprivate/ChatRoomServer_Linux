@@ -3,8 +3,7 @@
 
 CProcess::CProcess()
 {
-	m_func = nullptr;
-	m_pid = 0;
+	m_func = NULL;
 	memset(m_pipes, 0, sizeof(m_pipes));
 }
 
@@ -18,19 +17,14 @@ CProcess::~CProcess()
 
 int CProcess::CreateSubProcess()
 {
-	if (!m_func) return -1;
-	//创建子线程前分离
-	int ret = socketpair(AF_LOCAL, SOCK_STREAM, 0, m_pipes);
-	if (ret == -1) {
-		printf("<%s> [%d] (%s)  errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, errno, strerror(errno));
-		return -2;
-	}
-	int pid = fork();
-	if (pid == -1) return -3; 
-	if (pid == 0)
-	{		
-		//子进程 关闭写功能
-		close(m_pipes[1]);
+	if (m_func == NULL)return -1;
+	int ret = socketpair(AF_LOCAL,SOCK_STREAM, 0, m_pipes);
+	if (ret == -1)return -2;
+	pid_t pid = fork();
+	if (pid == -1)return -3;
+	if (pid == 0) {
+		//子进程
+		close(m_pipes[1]);//关闭掉写
 		m_pipes[1] = 0;
 		ret = (*m_func)();
 		exit(ret);
@@ -47,7 +41,7 @@ int CProcess::SendFD(int fd)
 {
 	struct msghdr msg;
 	iovec iov[2];
-	char buf[][10] = { "edoyun","jueding" };
+	char buf[2][10] = { "edoyun","jueding" };
 	iov[0].iov_base = buf[0];
 	iov[0].iov_len = sizeof(buf[0]);
 	iov[1].iov_base = buf[1];
@@ -64,8 +58,7 @@ int CProcess::SendFD(int fd)
 	*(int*)CMSG_DATA(cmsg) = fd;
 	msg.msg_control = cmsg;
 	msg.msg_controllen = cmsg->cmsg_len;
-	ssize_t ret = sendmsg(m_pipes[1], &msg,
-		0);
+	ssize_t ret = sendmsg(m_pipes[1], &msg,0);
 	free(cmsg);
 	if (ret == -1) {
 		return -2;
@@ -78,24 +71,22 @@ int CProcess::RecvFD(int& fd)
 {
 	msghdr msg;
 	iovec iov[2];
-	char buf[][10] = { "","" };
+	char buf[2][10] = { "edoyun","jueding" };
 	iov[0].iov_base = buf[0];
 	iov[0].iov_len = sizeof(buf[0]);
 	iov[1].iov_base = buf[1];
 	iov[1].iov_len = sizeof(buf[1]);
 	msg.msg_iov = iov;
 	msg.msg_iovlen = 2;
-	cmsghdr* cmsg = (cmsghdr*)calloc(1,
-		CMSG_LEN(sizeof(int)));
+	cmsghdr* cmsg = (cmsghdr*)calloc(1, CMSG_LEN(sizeof(int)));
 	if (cmsg == NULL)return -1;
 	cmsg->cmsg_len = CMSG_LEN(sizeof(int));
 	cmsg->cmsg_level = SOL_SOCKET;
 	cmsg->cmsg_type = SCM_RIGHTS;
 	msg.msg_control = cmsg;
-	msg.msg_controllen =
-		CMSG_LEN(sizeof(int));
-	ssize_t ret = recvmsg(m_pipes[0], &msg,
-		0);
+	msg.msg_controllen = CMSG_LEN(sizeof(int));
+		
+	ssize_t ret = recvmsg(m_pipes[0], &msg, 0);
 	if (ret == -1) {
 		free(cmsg);
 		return -2;

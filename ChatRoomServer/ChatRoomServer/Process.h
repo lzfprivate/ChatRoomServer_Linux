@@ -2,35 +2,26 @@
 #include <cstdio>
 #include <unistd.h>
 #include <sys/types.h>
+#include <functional>
+#include <memory.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "FuncionBase.h"
 
 
-template <typename _FUNCTION_,typename... _ARGS_>
-class CFunctionProcess :public CFunctionBase
+template<typename _FUNCTION_, typename... _ARGS_>
+class CFunctionProc :public CFunctionBase
 {
 public:
-	virtual ~CFunctionProcess() {
-
-	}
-	CFunctionProcess(_FUNCTION_ func, _ARGS_... args)
+	CFunctionProc(_FUNCTION_ func, _ARGS_... args)
 		:m_binder(std::forward<_FUNCTION_>(func), std::forward<_ARGS_>(args)...)
-	{
-
-	}
-
-	int SetFunction(_FUNCTION_ func, _ARGS_... args) {
-		m_binder = new CFunctionProcess<_FUNCTION_,_ARGS_...>(func, args...);
-		if (m_binder) return 0;
-		return -1;
-	}
-
-	int operator()() override {
+	{}
+	virtual ~CFunctionProc() {}
+	virtual int operator()() {
 		return m_binder();
 	}
-
-private:
-	typename std::_Bindres_helper<int, _FUNCTION_, _ARGS_...>::type m_binder;
+	typename std::_Bindres_helper<int,_FUNCTION_, _ARGS_...>::type m_binder;
 };
 
 class CProcess
@@ -47,10 +38,11 @@ public:
 	/// <param name="func">函数名</param>
 	/// <param name="...args">参数集合</param>
 	/// <returns>0：成功 其他：失败</returns>
-	template <typename _FUNCTION_, typename ..._ARGS_>
-	int SetFunctionEntry(_FUNCTION_ func, _ARGS_... args) {
-		m_func = new CFunctionProcess<_FUNCTION_, _ARGS_...>(func, args...);
-		if (m_func) return 0;
+	template<typename _FUNCTION_, typename..._ARGS_>
+	int SetEntryFunction(_FUNCTION_ func,_ARGS_... args)
+	{
+		m_func = new CFunctionProc<_FUNCTION_,_ARGS_...>(func, args...);
+		if(m_func) return 0;
 		return -1;
 	}
 
