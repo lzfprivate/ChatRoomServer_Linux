@@ -122,7 +122,7 @@ _mysql_table_::_mysql_table_(const _mysql_table_&)
 
 _mysql_table_::operator const CBuffer() const
 {
-	return "'"+m_strBelongDataBase + "'." + m_strName;
+	return "'" + m_strBelongDataBase + "'." + m_strName;
 }
 
 CBuffer _mysql_table_::Remove(const _Table_& table)

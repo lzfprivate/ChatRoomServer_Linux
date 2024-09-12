@@ -11,9 +11,9 @@ enum EnSockFlag
 {
 	EnNone = 0,
 	EnTCP = 1,
-	EnServer = 2,
-	EnNetwork = 4,
-	EnNonBlock = 8
+	EnServer = 2,			//服务端标识
+	EnNetwork = 4,			//网络套接字标识
+	EnNonBlock = 8			//阻塞标识
 };
 
 class CSockParam 
@@ -26,6 +26,7 @@ public:
 	CSockParam(const CBuffer& buf,  int attr);
 	~CSockParam();
 
+public:
 	sockaddr* addrin() {
 		return (sockaddr*)&m_addrin;
 	}
@@ -41,15 +42,12 @@ public:
 		return m_bufIp.c_str();
 	}
 
-
-private:
+public:
 	sockaddr_in m_addrin;			//网络地址
 	sockaddr_un m_addrun;			//本地网络地址
 
 	CBuffer		m_bufIp;			//如果是网络通信,为IP字符串,如果是本地通信,为本地文件
 	short		m_nPort;			//端口			
-
-	CBuffer		m_bufPath;			//本地套接字路径字符串
 
 public:
 	int		m_iAttr;			//通信的相关属性
@@ -76,14 +74,14 @@ public:
 	//接收
 	virtual int Recv(CBuffer& buf) = 0;
 
-	void Close() {
+	virtual void Close() {
 		if (m_socket)
 		{
 			int fd = m_socket;
 			m_socket = -1;
 			close(fd);
 		}
-		if (!(m_param.m_iAttr & EnNetwork)) {
+		if (m_param.m_iAttr & EnServer) {
 			unlink(m_param);
 		}
 	}
@@ -134,6 +132,9 @@ public:
 	/// <returns>0:接收完成 1:接收失败</returns>
 	virtual int Recv(CBuffer& buf) override;
 
+	virtual void Close() {
+		CSockBase::Close();
+	}
 };
 
 class CSocket : public CSockBase

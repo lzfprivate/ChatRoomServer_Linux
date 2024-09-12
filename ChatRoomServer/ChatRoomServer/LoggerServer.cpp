@@ -17,11 +17,10 @@ CLoggerServer::CLoggerServer()
 	: m_thread(&CLoggerServer::ThreadFunc, this)
 	,m_socket(nullptr)
 {
-	//TODO:
 	char absPath[128];
 	getcwd(absPath, 128);
-
-	m_bufPath = CBuffer(absPath) + CBuffer("/log/") + GetTimeStr() + CBuffer(".log");
+	m_bufPath = absPath;
+	m_bufPath += ("/log/" + GetTimeStr() + ".log");
 }
 
 CLoggerServer::~CLoggerServer()
@@ -38,14 +37,29 @@ int CLoggerServer::Start()
 		mkdir("log", S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
 	}
 
-	fopen(m_bufPath, "wr+");
+	m_file = fopen(m_bufPath, "w+");
+	if (!m_file) {
+		printf("%s(%d):<%s> pid=%d errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, getpid(), errno, strerror(errno));
+		return -1;
+	}
+	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
 
 	int ret = m_epoll.Create(2);
-	ret = m_socket->InitSocket(CSockParam("./logger.sock", EnTCP | EnServer | EnNonBlock));
-	ret = m_epoll.Add(*m_socket, CEpoll_Data(m_socket),EPOLLIN | EPOLLERR);
-	ret = m_thread.Start();
+	m_socket = new CLocalSocket();
+	if (m_socket == nullptr) {
+		printf("%s(%d):<%s> pid=%d errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, getpid(), errno, strerror(errno));
+		return -2;
+	}
+	//TOCORRECT:使用CSockParam()构造时,传入路径时，IP的值传入失败
+	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
 
-	return 0;
+	ret = m_socket->InitSocket(CSockParam("./log/logger.sock", EnTCP | EnServer | EnNonBlock));
+	printf("%s(%d):<%s> pid=%d ret = %d\n", __FILE__, __LINE__, __FUNCTION__, getpid(), ret);
+	ret = m_epoll.Add(*m_socket, CEpoll_Data(m_socket),EPOLLIN | EPOLLERR);
+	printf("%s(%d):<%s> pid=%d ret = %d\n", __FILE__, __LINE__, __FUNCTION__, getpid(), ret);
+	ret = m_thread.Start();
+	printf("%s(%d):<%s> pid=%d ret = %d\n", __FILE__, __LINE__, __FUNCTION__, getpid(), ret);
+	return ret;
 }
 
 void CLoggerServer::Trace(const CBuffer& buff)
@@ -149,8 +163,8 @@ CBuffer CLoggerServer::GetTimeStr()
 
 	//拼接时间字符串
 	int nSize = snprintf(bufTime, bufTime.size(), 
-		"%04d-02%d-%02d-%02d %02d:%02d:%02d.%03d", 
-		time->tm_year, time->tm_mon, time->tm_mday,
+		"%04d-02%d-%02d-%02d_%02d_%02d_%02d_%03d", 
+		time->tm_year + 1900, time->tm_mon + 1, time->tm_mday,
 		time->tm_hour, time->tm_min, time->tm_sec,
 		tmb.millitm);
 	bufTime.resize(nSize);

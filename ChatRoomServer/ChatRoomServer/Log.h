@@ -1,7 +1,7 @@
 #pragma once
 
 #include <pthread.h>
-#include <string>
+#include <sstream>
 #include "Buffer.h"
 
 enum EnLogLevel
@@ -28,7 +28,7 @@ public:
 	{
 		std::stringstream stream;
 		stream << data;
-		m_buf += data;
+		m_buf += stream.str();
 		return *this;
 	}
 
