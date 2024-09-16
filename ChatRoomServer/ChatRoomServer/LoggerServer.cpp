@@ -1,5 +1,5 @@
 #include "LoggerServer.h"
-#include <unordered_map>
+#include <map>
 #include <cstddef>
 #include <sys/timeb.h>
 #include <time.h>
@@ -10,8 +10,15 @@
 
 
 #ifndef ERR_RETURN(err,ret) 
-#define ERR_RETURN(err,ret) if(err == 0) return ret; 
+#define ERR_RETURN(err,ret) if(err!= 0) {printf("%s(%d):<%s> ret = %d errno=%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, ret,errno,strerror(errno));return ret;}
 #endif
+
+#ifndef ERR_CONTINUE(err)
+#define ERR_CONTINUE(err) if(err!= 0){printf("%s(%d):<%s> ret = %d errno=%d errmsg=%s\n", __FILE__, __LINE__, __FUNCTION__, ret, errno, strerror(errno));continue; }
+#endif // !ERR_CONTINUE(err)
+
+
+
 
 CLoggerServer::CLoggerServer()
 	: m_thread(&CLoggerServer::ThreadFunc, this)
@@ -30,6 +37,7 @@ CLoggerServer::~CLoggerServer()
 
 int CLoggerServer::Start()
 {
+	if (m_socket == nullptr) return -1;
 	//log目录.专门用于日志文件的写入
 	if (access("log", R_OK | W_OK) != 0)
 	{
@@ -40,25 +48,39 @@ int CLoggerServer::Start()
 	m_file = fopen(m_bufPath, "w+");
 	if (!m_file) {
 		printf("%s(%d):<%s> pid=%d errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, getpid(), errno, strerror(errno));
-		return -1;
-	}
-	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
-
-	int ret = m_epoll.Create(2);
-	m_socket = new CLocalSocket();
-	if (m_socket == nullptr) {
-		printf("%s(%d):<%s> pid=%d errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, getpid(), errno, strerror(errno));
 		return -2;
 	}
-	//TOCORRECT:使用CSockParam()构造时,传入路径时，IP的值传入失败
 	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
 
-	ret = m_socket->InitSocket(CSockParam("./log/logger.sock", EnTCP | EnServer | EnNonBlock));
-	printf("%s(%d):<%s> pid=%d ret = %d\n", __FILE__, __LINE__, __FUNCTION__, getpid(), ret);
-	ret = m_epoll.Add(*m_socket, CEpoll_Data(m_socket),EPOLLIN | EPOLLERR);
-	printf("%s(%d):<%s> pid=%d ret = %d\n", __FILE__, __LINE__, __FUNCTION__, getpid(), ret);
+	int ret = m_epoll.Create(1);
+	ERR_RETURN(ret, -3);
+	m_socket = new CLocalSocket();
+	if (m_socket == nullptr) {
+		Close();
+		printf("%s(%d):<%s> pid=%d errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, getpid(), errno, strerror(errno));
+		return -4;
+	}
+	ret = m_socket->InitSocket(CSockParam("./log/logger.sock", EnServer | EnNonBlock));
+	printf("%s(%d):<%s> ret = %d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+	if (ret != 0) {
+		Close();
+		printf("%s(%d):<%s> pid=%d errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, getpid(), errno, strerror(errno));
+		return -5;
+	}
+	ret = m_epoll.Add(*m_socket, CEpoll_Data((void*)m_socket),EPOLLIN | EPOLLERR);
+	printf("%s(%d):<%s> ret = %d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+	if (ret != 0) {
+		Close();
+		printf("%s(%d):<%s> pid=%d errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, getpid(), errno, strerror(errno));
+		return -6;
+	}
 	ret = m_thread.Start();
-	printf("%s(%d):<%s> pid=%d ret = %d\n", __FILE__, __LINE__, __FUNCTION__, getpid(), ret);
+	printf("%s(%d):<%s> ret = %d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+	if (ret != 0) {
+		Close();
+		printf("%s(%d):<%s> pid=%d errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, getpid(), errno, strerror(errno));
+		return -7;
+	}
 	return ret;
 }
 
@@ -67,10 +89,26 @@ void CLoggerServer::Trace(const CBuffer& buff)
 	static thread_local CLocalSocket client;
 	int ret = -1;
 	if (client == -1) {
-		ret = client.InitSocket(CSockParam("./logger.sock",0));
+		ret = client.InitSocket(CSockParam("./log/logger.sock", 0));
+		if (ret != 0)
+		{
+			printf("%s(%d):<%s> ret = %d errno=%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, ret, errno, strerror(errno));
+			return;
+		}
 		ret = client.Link();
+		if (ret != 0)
+		{
+			printf("%s(%d):<%s> ret = %d errno=%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, ret, errno, strerror(errno));
+			return;
+		}
 	}
 	ret = client.Send(buff);
+	if (ret != 0)
+	{
+		printf("%s(%d):<%s> ret = %d errno=%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, ret, errno, strerror(errno));
+		return;
+	}
+	printf("%s(%d):<%s> ret = %d\n", __FILE__, __LINE__, __FUNCTION__, ret);
 }
 
 void CLoggerServer::WriteLog(const CBuffer& buff)
@@ -87,23 +125,30 @@ void CLoggerServer::WriteLog(const CBuffer& buff)
 void CLoggerServer::Close()
 {
 	if (m_socket) {
-		delete m_socket;
+		CSockBase* socket = m_socket;
+		m_socket = nullptr;
+		delete socket;
 	}
 	m_epoll.Close();
 	m_thread.Stop();
-	fclose(m_file);
+	if (m_file)fclose(m_file);
 }
 
-void CLoggerServer::ThreadFunc(void* args)
+int CLoggerServer::ThreadFunc()
 {
 	EPEVENTS events;
-	static std::unordered_map<int, CSockBase*> mpClients;
-	while (1)
+	printf("%s(%d):<%s> pid = %d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
+	std::map<int, CSockBase*> mpClients;
+	while (m_thread.IsVaild() && m_epoll != -1 && m_socket)
 	{
-		int ret = m_epoll.WaitEvents(events);
-		if (ret < 0) continue;
+		int ret = m_epoll.WaitEvents(events,1);
+		if (ret < 0) {
+			printf("%s(%d):<%s> ret = %d errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, ret,errno,strerror(errno));
+			continue;
+		}
 		if (ret > 0)
 		{
+			printf("%s(%d):<%s> ret = %d\n", __FILE__, __LINE__, __FUNCTION__, ret);
 			size_t i = 0;
 			for (; i < events.size(); ++i)
 			{
@@ -115,27 +160,51 @@ void CLoggerServer::ThreadFunc(void* args)
 					if (events[i].data.ptr == m_socket)
 					{
 						//客户端接入
-						CSockBase* client = new CLocalSocket();
+						CSockBase* client = nullptr;
 						m_socket->Link(&client);
 						ret = client->InitSocket(CSockParam("./log/server.sock",0));
-						if (ret != 0) continue;
-						m_epoll.Add(*client, CEpoll_Data((void*)client), EPOLLIN | EPOLLERR);
+						printf("%s(%d):<%s> ret = %d client=%p socket=%d\n", __FILE__, __LINE__, __FUNCTION__, ret, client, (int)*client);
+						if (ret != 0) {
+							printf("%s(%d):<%s> ret = %d errno=%d errmsg=%s\n", __FILE__, __LINE__, __FUNCTION__, ret, errno, strerror(errno));
+							if(client) delete client;
+							continue;
+						}
+						ret = m_epoll.Add(*client, CEpoll_Data((void*)client), EPOLLIN | EPOLLERR);
+						if (ret != 0) {
+							printf("%s(%d):<%s> ret = %d errno=%d errmsg=%s\n", __FILE__, __LINE__, __FUNCTION__, ret, errno, strerror(errno));
+							if (client) delete client;
+							continue;
+						}
+						printf("%s(%d):<%s> ret = %d \n", __FILE__, __LINE__, __FUNCTION__, ret);
+
 						auto it = mpClients.find(*client);
 						if (it != mpClients.end())
 						{
 							delete it->second;
 							it->second = NULL;
-							it->second = client;
 						}
-						else {
-							mpClients.insert({ *client,client });
-						}
+						mpClients[*client] = client;
 					}
 					else {
 						//数据传入
+						printf("%s(%d):<%s> recv ret = %d\n", __FILE__, __LINE__, __FUNCTION__, ret);
 						CSockBase* client = (CLocalSocket*)events[i].data.ptr;
-						CBuffer bufRecv(2048);
-						client->Recv(bufRecv);
+						CBuffer bufRecv(1024 * 1024);
+						ret = client->Recv(bufRecv);
+						printf("%s(%d):<%s> recv ret = %d\n", __FILE__, __LINE__, __FUNCTION__, ret);
+						if (ret < 0)
+						{
+							auto it = mpClients.find(*client);
+							if (it != mpClients.end())
+							{
+								delete it->second;
+								it->second = NULL;
+							}
+						}
+						else {
+							printf("%s(%d):<%s> ret = %d recv content=%s\n", __FILE__, __LINE__, __FUNCTION__, ret, bufRecv);
+							WriteLog(bufRecv);
+						}
 					}
 				}
 			}
@@ -145,13 +214,13 @@ void CLoggerServer::ThreadFunc(void* args)
 			}
 		}
 	}
-
 	for (auto iter = mpClients.begin(); iter != mpClients.end(); ++iter)
 	{
 		delete iter->second;
 		iter->second = NULL;
 	}
 	mpClients.clear();
+	return 0;
 }
 
 CBuffer CLoggerServer::GetTimeStr()

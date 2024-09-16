@@ -10,7 +10,7 @@
 enum EnSockFlag
 {
 	EnNone = 0,
-	EnTCP = 1,
+	EnUDP = 1,
 	EnServer = 2,			//服务端标识
 	EnNetwork = 4,			//网络套接字标识
 	EnNonBlock = 8			//阻塞标识
@@ -82,11 +82,17 @@ public:
 			close(fd);
 		}
 		if (m_param.m_iAttr & EnServer) {
+			printf("%s(%d):<%s> release local net path:%s\n", __FILE__, __LINE__, __FUNCTION__, m_param.m_bufIp.c_str());
 			unlink(m_param);
 		}
 	}
 
 	operator int() const {
+		return m_socket;
+	}
+
+	int GetSocketFd() const
+	{
 		return m_socket;
 	}
 

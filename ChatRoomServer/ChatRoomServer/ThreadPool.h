@@ -272,7 +272,7 @@ private:
 
 			//(*task.function)(task.args);
 			task.m_function(task.m_args); //执行函数
-			//释放空间
+			//释放空间 
 			delete task.m_args;
 
 			pthread_mutex_lock(&m_mutexTask);

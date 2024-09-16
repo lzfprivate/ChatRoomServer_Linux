@@ -38,8 +38,11 @@ class CThread
 public:
 	CThread();
 	template<typename _FUNCTION_,typename ..._ARGS_>
-	CThread(_FUNCTION_ func, _ARGS_... args) {
-
+	CThread(_FUNCTION_ func, _ARGS_... args):
+		m_function(new CFunction<_FUNCTION_,_ARGS_...>(func, args...))
+	{
+		m_pid = 0;
+		m_bRunning = true;
 	}
 
 	template<typename _FUNCTION_, typename ..._ARGS_>
@@ -60,6 +63,8 @@ public:
 	int Pause();
 	//Õ£÷π
 	int Stop();
+	// «∑Ò”––ß
+	bool IsVaild() const;
 
 
 private:

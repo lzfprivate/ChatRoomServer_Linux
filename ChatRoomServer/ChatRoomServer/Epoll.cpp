@@ -1,6 +1,7 @@
 #include "Epoll.h"
 #include <string.h>
 #include <unistd.h>
+#include <cstdio>
 
 #define EPOLLSIZE 2048
 
@@ -39,6 +40,10 @@ CEpoll_Data::CEpoll_Data(void* ptr)
 CEpoll_Data& CEpoll_Data::operator=(const CEpoll_Data& data)
 {
 	// TODO: 在此处插入 return 语句
+	if (&data != this)
+	{
+		m_data.u64 = data.m_data.u64;
+	}
 	return *this;
 }
 
@@ -66,9 +71,10 @@ int CEpoll::Create(unsigned int nSize)
 
 int CEpoll::Add(int fd, const CEpoll_Data& data, unsigned op)
 {
+	if (m_epoll == -1) return -1;
 	epoll_event ep_event{ op ,data };
-	epoll_ctl(m_epoll, EPOLL_CTL_ADD,fd , &ep_event);
-	return 0;
+	int ret = epoll_ctl(m_epoll, EPOLL_CTL_ADD, fd, &ep_event);
+	return ret;
 }
 
 int CEpoll::Modify(int fd, const CEpoll_Data& data, unsigned op)
@@ -96,18 +102,18 @@ int CEpoll::WaitEvents(EPEVENTS& epEvents, int timeout)
 	if (events.size() > 0 ) {
 		epEvents.resize(iRet);
 	}
-	for (int i = 0; i < iRet; ++i)
-	{
-		epEvents[i] = events[i];
-	}
+	memcpy((void*)epEvents.data(), events.data(), epEvents.size() * sizeof(epoll_event));
 	return iRet;
 }
 
 int CEpoll::Close()
 {
-	int fd = m_epoll;
-	m_epoll = -1;
-	close(fd);
+	if (m_epoll != -1)
+	{
+		int fd = m_epoll;
+		m_epoll = -1;
+		close(fd);
+	}
 	return 0;
 }
 

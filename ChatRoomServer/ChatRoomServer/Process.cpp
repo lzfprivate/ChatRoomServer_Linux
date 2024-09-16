@@ -59,7 +59,7 @@ int CProcess::SendFD(int fd)
 	msg.msg_control = cmsg;
 	msg.msg_controllen = cmsg->cmsg_len;
 	ssize_t ret = sendmsg(m_pipes[1], &msg,0);
-	free(cmsg);
+	if(cmsg) free(cmsg);
 	if (ret == -1) {
 		return -2;
 	}
@@ -71,7 +71,7 @@ int CProcess::RecvFD(int& fd)
 {
 	msghdr msg;
 	iovec iov[2];
-	char buf[2][10] = { "edoyun","jueding" };
+	char buf[2][10] = { "","" };
 	iov[0].iov_base = buf[0];
 	iov[0].iov_len = sizeof(buf[0]);
 	iov[1].iov_base = buf[1];
@@ -92,7 +92,7 @@ int CProcess::RecvFD(int& fd)
 		return -2;
 	}
 	fd = *(int*)CMSG_DATA(cmsg);
-	free(cmsg);
+	if(cmsg) free(cmsg);
 	return 0;
 }
 

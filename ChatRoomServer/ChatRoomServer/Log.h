@@ -37,6 +37,9 @@ public:
 	}
 
 private:
+	CBuffer GetCurTimeString();
+
+private:
 	CBuffer		m_buf;
 	bool		m_bAuto;
 

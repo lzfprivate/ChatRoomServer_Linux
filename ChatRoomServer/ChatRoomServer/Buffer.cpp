@@ -44,16 +44,16 @@ CBuffer& CBuffer::operator=(const CBuffer& buf)
 {
 	if (&buf != this)
 	{
-		*this = buf;
+		resize(buf.size());
+		memcpy((void*)c_str(), buf.c_str(), buf.size());
 	}
-	printf("%s(%d):<%s> param.bufIp = %s,m_bufIp=%s\n", __FILE__, __LINE__, __FUNCTION__, buf.c_str(), c_str());
 
 	return *this;
 }
 
-CBuffer& CBuffer::operator=(const char* buf)
-{
-	resize(strlen(buf));
-	memcpy((void*)c_str(), buf, strlen(buf));
-	return *this;
-}
+//CBuffer& CBuffer::operator=(const char* buf)
+//{
+//	resize(strlen(buf));
+//	memcpy((void*)c_str(), buf, strlen(buf));
+//	return *this;
+//}

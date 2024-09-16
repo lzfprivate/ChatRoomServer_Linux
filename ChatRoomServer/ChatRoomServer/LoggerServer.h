@@ -45,7 +45,7 @@ public:
 
 private:
 	//线程函数:实现主功能
-	void ThreadFunc(void* args);
+	int ThreadFunc();
 
 	//获取当前时间
 	CBuffer GetTimeStr();
