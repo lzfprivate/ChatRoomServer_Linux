@@ -1,6 +1,15 @@
 #include "ThreadPool.h"
 #include <time.h>
 #include <cstdio>
+#include <string.h>
+
+#ifndef Err_Return(val,ret)
+#define Err_Return(val, ret)     if (val != 0) { \
+printf("%s(%d):<%s> pid=%d ret:%d errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, getpid(), val, errno, strerror(errno));\
+return ret;\
+}
+#endif // !Err_Return(val,ret)
+
 
 
 CThreadPool::CThreadPool():m_server(nullptr)
@@ -24,12 +33,15 @@ CThreadPool::~CThreadPool()
 
 int CThreadPool::Start(unsigned int nCount)
 {
-    m_epoll.Create(10);
-    //TODO:
-    m_server->InitSocket(CSockParam(m_bufSockPath, EnServer | EnNonBlock));
-
-    m_epoll.Add(*m_server,CEpoll_Data((void*)m_server));
-
+    int ret = -1;
+    ret = m_epoll.Create(10);
+    Err_Return(ret, -1);
+    ret = m_server->InitSocket(CSockParam(m_bufSockPath, EnServer | EnNonBlock));
+    Err_Return(ret, -2);
+    ret = m_server->Link();
+    Err_Return(ret, -3);
+    ret = m_epoll.Add(*m_server,CEpoll_Data((void*)m_server));
+    Err_Return(ret, -4);
     m_vecThreads.resize(nCount);
     for (size_t i = 0; i < nCount; ++i) {
         m_vecThreads[i] = new CThread(&CThreadPool::DispatchTask, this);

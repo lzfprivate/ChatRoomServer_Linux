@@ -37,7 +37,7 @@ CLoggerServer::~CLoggerServer()
 
 int CLoggerServer::Start()
 {
-	if (m_socket == nullptr) return -1;
+	if (m_socket) return -1;
 	//log目录.专门用于日志文件的写入
 	if (access("log", R_OK | W_OK) != 0)
 	{
