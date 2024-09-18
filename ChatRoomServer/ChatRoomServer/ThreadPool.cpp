@@ -101,6 +101,7 @@ int CThreadPool::Close()
     m_epoll.Close();
     if (m_server) {
         CSockBase* sock = m_server;
+        m_server = nullptr;
         delete sock;
     }
     unlink(m_bufSockPath);

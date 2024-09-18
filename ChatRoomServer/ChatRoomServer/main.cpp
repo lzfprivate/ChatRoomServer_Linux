@@ -4,6 +4,7 @@
 #include <string.h>
 #include "LoggerServer.h"
 #include "Process.h"
+#include "ThreadPool.h"
 
 
 
@@ -76,14 +77,16 @@ int main()
         return -1;
     }
     printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
-    LoggerTest();
+    //LoggerTest();
     printf("%s(%d):<%s> main thread pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
 
     //CThread thread(LoggerTest);
     //thread.Start();
     //printf("%s(%d):<%s> another thread pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
-
-
+    CThreadPool pool;
+    pool.Start();
+    pool.AddTask(LoggerTest);
+    
     procclients.SetEntryFunction(CreateLoggerClient, &procclients);
        
     ret = procclients.CreateSubProcess();

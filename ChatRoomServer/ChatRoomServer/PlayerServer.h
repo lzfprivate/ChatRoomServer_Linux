@@ -3,6 +3,8 @@
 #include "Bussiness.h"
 #include "ThreadPool.h"
 #include "DataBase.h"
+#include <vector>
+
 class CPlayerServer :
     public CBussiness
 {
@@ -24,6 +26,10 @@ private:
     int DecodeHttpRequest(const CBuffer& request);
     //组织数据回复
     CBuffer MakeHttpResponse(int ret);
+
+
+    std::vector<CBuffer> GetFilesInFolder(const CBuffer& folderPath);
+
 
 private:
     CEpoll      m_epoll;
