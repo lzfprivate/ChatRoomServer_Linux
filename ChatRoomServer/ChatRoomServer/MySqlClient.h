@@ -1,21 +1,22 @@
-#pragma once
+ï»¿#pragma once
 #include <string.h>
 #include "DataBase.h"
 #include <mysql/mysql.h>
 
 
 enum enDataType {
-	TYPE_NULL=0,		//¿Õ
+	TYPE_NULL=0,		//ç©º
 	TYPE_BOOL =1,		//bool
 	TYPE_INT = 2,		//int
-	TYPE_DATETIME = 4,	//Ê±¼ä
-	TYPE_REAL = 8,		//Ğ¡Êı
-	TYPE_VARCHAR = 16,	//×Ö·û
-	TYPE_TEXT=32,			//×Ö·û
+	TYPE_DATETIME = 4,	//æ—¶é—´
+	TYPE_REAL = 8,		//å°æ•°
+	TYPE_VARCHAR = 16,	//å­—ç¬¦
+	TYPE_TEXT=32,			//å­—ç¬¦
 	TYPE_BLOB=64
 };
 
-enum enColumn
+//åˆ—æ•°æ®å±æ€§
+enum enPropertyFlag
 {
 	NOT_NULL = 1,
 	PRIMARY_KEY = 2,
@@ -28,40 +29,39 @@ enum enColumn
 class _mysql_field_ : public _Field_
 {
 public:
-
-	//ÁĞÊôĞÔ
-	CBuffer m_strName;			//ÊôĞÔÃû ĞÕÃû ĞÔ±ğ ...
-	CBuffer m_strType;			//ÊôĞÔÀàĞÍ int char varchar...
-	CBuffer m_strSize;			//ÊôĞÔÕ¼ÓÃ³¤¶È
-	unsigned m_uAttr;			//ÊôĞÔµÄÊôĞÔ NULL NOT NULL PRIVATE KEY UNIQUEµÈ
-	CBuffer m_strDefault;		//ÊôĞÔµÄÄ¬ÈÏÖµ
-	CBuffer m_strCheck;			//ÊôĞÔµÄÔ¼ÊøÌõ¼ş ´óÓÚ0 Ğ¡ÓÚ0 ...
+	//åˆ—å±æ€§
+	CBuffer m_strName;			//å±æ€§å å§“å æ€§åˆ« ...
+	CBuffer m_strType;			//å±æ€§ç±»å‹ åœ¨SQLè¯­å¥ä¸­çš„ç±»å‹å­—ç¬¦ä¸²
+	CBuffer m_strSize;			//å±æ€§å ç”¨é•¿åº¦
+	unsigned m_uAttr;			//å±æ€§çš„å±æ€§ NULL NOT NULL PRIVATE KEY UNIQUEç­‰
+	CBuffer m_strDefault;		//å±æ€§çš„é»˜è®¤å€¼
+	CBuffer m_strCheck;			//å±æ€§çš„çº¦æŸæ¡ä»¶ å¤§äº0 å°äº0 ...
 
 	unsigned m_uCondition;
 
 	
 
 public:
-	_mysql_field_() {}
+	_mysql_field_();
 	virtual ~_mysql_field_() {}
-	_mysql_field_(int nType, CBuffer name, CBuffer type, CBuffer size, int attr, CBuffer defaultVal, CBuffer Check);
+	_mysql_field_(int nType, const CBuffer& name, const CBuffer& type, const CBuffer& size, int attr, const CBuffer& defaultVal, const CBuffer& Check);
 	_mysql_field_(const _mysql_field_& field);
 	virtual CBuffer Create();
-	//´Ó×Ö·û´®ÖĞ¼ÓÔØ
+	//ä»å­—ç¬¦ä¸²ä¸­åŠ è½½
 	virtual void LoadFromStr(const CBuffer& str);
-	//±í´ïÊ½,ÓÃÓÚwhereÓï¾ä
+	//è¡¨è¾¾å¼,ç”¨äºwhereè¯­å¥
 	virtual CBuffer EqualExp();
-	//½«ÁĞÖĞµÄÊı¾İ×ª»»³É×Ö·û´®
+	//å°†åˆ—ä¸­çš„æ•°æ®è½¬æ¢æˆå­—ç¬¦ä¸²
 	virtual CBuffer toSqlStr();
-	//»ñÈ¡ÁĞµÄÈ«Ãû Êı¾İ¿â.±í.ÁĞÃû
+	//è·å–åˆ—çš„å…¨å æ•°æ®åº“.è¡¨.åˆ—å
 	virtual operator const CBuffer() const;
 
 private:
-	//×Ö·û×ª16½øÖÆ
+	//å­—ç¬¦è½¬16è¿›åˆ¶
 	CBuffer Str2Hex(const CBuffer& str) const;
 	
 
-	unsigned m_nType;			//Êı¾İÀàĞÍ Óë»ùÀà¶¨ÒåµÄm_strType×÷ÓÃÏàÍ¬ 
+	unsigned m_nType;			//æ•°æ®ç±»å‹ ä¸åŸºç±»å®šä¹‰çš„m_strTypeä½œç”¨ç›¸åŒ 
 
 };	
 
@@ -70,24 +70,25 @@ class _mysql_table_ : public _Table_
 public:
 	_mysql_table_();
 	~_mysql_table_(){}
-	_mysql_table_(const _mysql_table_&);
+	_mysql_table_(const _mysql_table_& table);
+	_mysql_table_& operator=(const _mysql_table_& table) = delete;
 
 public:
 
-	//ÒÔÏÂ²Ù×÷¾ù·µ»ØÒ»¸ösqlÓï¾ä
+	//ä»¥ä¸‹æ“ä½œå‡è¿”å›ä¸€ä¸ªsqlè¯­å¥
 	CBuffer Create() override;
 	CBuffer Drop()override;
 	CBuffer Insert(const _Table_& table)override;
 	CBuffer Remove(const _Table_& table) override;
-	//TODO:Ìí¼Ó²éÕÒÌõ¼ş
+	//TODO:æ·»åŠ æŸ¥æ‰¾æ¡ä»¶
 	CBuffer Query(const CBuffer& condition = "")override;
 	CBuffer Modify(const _Table_& table)override;
 
-	//»ñÈ¡±íµÄÃüÃû Êı¾İ¿âÃû.±íÃû
+	//è·å–è¡¨çš„å‘½å æ•°æ®åº“å.è¡¨å
 	operator const CBuffer() const override;
-	//¸´ÖÆ±í
+	//å¤åˆ¶è¡¨
 	PTable Copy() const override;
-	//ÇåÀí¿ÉÊ¹ÓÃÖµ
+	//æ¸…ç†å¯ä½¿ç”¨å€¼
 	virtual void ClearFieldUsed()override;
 
 
@@ -106,24 +107,24 @@ public:
 
 	}
 	virtual int Connect(const KEYVALUE& loginMsg);
-	//Ö´ĞĞÓï¾ä²»·µ»Ø½á¹û: Ôö¼Ó É¾³ıµÈ²»·µ»Ø½á¹ûµÄsqlÓï¾ä
+	//æ‰§è¡Œè¯­å¥ä¸è¿”å›ç»“æœ: å¢åŠ  åˆ é™¤ç­‰ä¸è¿”å›ç»“æœçš„sqlè¯­å¥
 	virtual int Execute(const CBuffer& sql);
-	//Ö´ĞĞÓï¾ä´ø·µ»Ø½á¹û: ²éÑ¯µÈÒª·µ»Ø½á¹û
+	//æ‰§è¡Œè¯­å¥å¸¦è¿”å›ç»“æœ: æŸ¥è¯¢ç­‰è¦è¿”å›ç»“æœ
 	virtual int Execute(const CBuffer& sql, Result& result, const _Table_& table);
-	//¿ªÆôÊÂÎñ
+	//å¼€å¯äº‹åŠ¡
 	virtual int StartTransaction();
-	//Ìá½»ÊÂÎñ
+	//æäº¤äº‹åŠ¡
 	virtual int CommitTransaction();
-	//»Ø¹öÊÂÎñ
+	//å›æ»šäº‹åŠ¡
 	virtual int RollbackTransaction();
-	//ÊÇ·ñÁ¬½Ó
+	//æ˜¯å¦è¿æ¥
 	virtual bool IsConnected();
-	//¹Ø±Õ
+	//å…³é—­
 	virtual int Close();
 
 private:
-	MYSQL m_db;				//mysqlÊı¾İ¿âSDK¶ÔÏó
-	bool m_bInit;			//³õÊ¼»¯±êÊ¶
+	MYSQL m_db;				//mysqlæ•°æ®åº“SDKå¯¹è±¡
+	bool m_bInit;			//åˆå§‹åŒ–æ ‡è¯†
 };
 
 
@@ -131,9 +132,10 @@ private:
 class name :public base{ \
 public: \
 virtual PTable Copy() const { return PTable(new name(*this));} \
-name() :base() { m_strName = #name;}
-#define DECLARE_MYSQL_FIELD(ntype,name,attr,type,size,default_,check) \
-{PField field(new _mysql_field_(ntype, #name,attr, type, size, default_,check)); \
-FieldDefine.push_back(field);  Fields[#name] = field; }
-#define DECLARE_TABLE_CLASS_END() };
+name() :base() { m_strName = #name; 
+#define DECLARE_MYSQL_FIELD(nType, strName,strType,strSize,nAttr, strDefault,strCheck) \
+{PFIELD field(new _mysql_field_(nType, strName,strType,strSize,nAttr, strDefault,strCheck));\
+printf("%s(%d):<%s> input attr = %d reset attr:%d\n", __FILE__, __LINE__, __FUNCTION__, nAttr,field->m_uAttr); \
+m_FieldDefine.emplace_back(field);  m_FieldList[strName] = field; }
+#define DECLARE_TABLE_CLASS_END() }};
 

@@ -16,9 +16,12 @@ const char* md5_key = "";
 #endif // !Err_Return(ret,retval)
 
 
-DECLARE_TABLE_CLASS(Login_user_mysql,_mysql_table_)
+DECLARE_TABLE_CLASS(Login_user_mysql, _mysql_table_)
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_id", "varchar", "(15)", PRIMARY_KEY, "", "")
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_account", "varchar", "(15)", NOT_NULL, "", "")
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_passwd", "varchar", "(15)", NOT_NULL, "", "")
+DECLARE_MYSQL_FIELD(TYPE_BOOL, "user_sex", "boolean", "", NOT_NULL, "男", "")
 DECLARE_TABLE_CLASS_END()
-
 
 CPlayerServer::CPlayerServer(unsigned nSize):
 	m_iCount(nSize)
@@ -130,6 +133,8 @@ int CPlayerServer::Recv(CSockBase* client, const CBuffer& buffer)
 	CBuffer bufName;
 	CBuffer strName;
 	long long size;
+	FILE* file;
+	std::vector<CBuffer> fileList = GetFilesInFolder("./");
 	switch (frame.m_iFrameFunc)
 	{
 	case 1:
@@ -145,20 +150,31 @@ int CPlayerServer::Recv(CSockBase* client, const CBuffer& buffer)
 		bufName.resize(frame.m_bufFrame.size() - sizeof(long long));
 		memcpy((void*)bufName.c_str(), frame.m_bufFrame.c_str() + sizeof(long long), bufName.size());
 		break;
-	case 5:				//上传文件
-		FILE * file;
-
-		fopen(strName, "wr+");
+	case 5:				//上传文件	存储在特定的路径下
+		fopen(bufName, "wr+");
 		fwrite(frame.m_bufFrame, 1, frame.m_bufFrame.size(), file);
 		fclose(file);
 		break;
 	case 6:				//查询文件
 		//TODO:查询特定路径下的所有文件，循环发送文件大小和目录
 		//TODO:在发送完所有的文件大小和文件名后，再发送一个空的文件名，表示没有文件了
-
+		for (int i = 0; i < fileList.size(); ++i)
+		{
+			frame.Encode(8, fileList[i].c_str());
+			client->Send(frame.m_bufTotal);
+		}
 		break;
-	case 7:				//下载文件
-		//TODO:发送文件
+	case 7:				//发送要下载文件名称和大小
+		size = *(long long*)frame.m_bufFrame.size();
+
+		bufName.resize(frame.m_bufFrame.size() - sizeof(long long));
+		memcpy((void*)bufName.c_str(), frame.m_bufFrame.c_str() + sizeof(long long), bufName.size());
+		break;
+	case 8:				//下载特定文件
+		fopen(bufName, "r");
+		char buf[10000];
+		fread(buf, 1, 10000, file);
+		frame.Encode(4, buf);
 		break;
 	default:
 		break;

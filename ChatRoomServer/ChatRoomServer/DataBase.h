@@ -11,7 +11,8 @@ enum SQL_OP {
 	SQL_INSERT = 1,
 	SQL_DELETE = 2,
 	SQL_QUERY = 4,
-	SQL_MODIFY = 8
+	SQL_MODIFY = 8,
+	SQL_CONDITION = 16			//sql语句中添加条件
 };
 
 /// <summary>
@@ -19,7 +20,9 @@ enum SQL_OP {
 /// </summary>
 class _Field_ {
 public:
-	_Field_() {}
+	_Field_() { }
+	_Field_(const _Field_& field);
+	_Field_& operator=(const _Field_& field);
 	virtual ~_Field_() {}
 
 public:
@@ -57,8 +60,8 @@ public:
 };
 
 class _Table_;
-using PTable = std::shared_ptr< _Table_>;
 using PFIELD = std::shared_ptr<_Field_>;
+using PTable = std::shared_ptr< _Table_>;
 using Result = std::list<PTable>;
 using KEYVALUE = std::map<CBuffer, CBuffer>;
 using FIELDARRAY = std::vector<PFIELD>;
@@ -101,11 +104,8 @@ public:
 public:
 	CBuffer m_strBelongDataBase;	//本表所属数据库名
 	CBuffer m_strName;				//表名
-	FIELDARRAY	m_FieldDefine	;	//用于存储结果
+	FIELDARRAY	m_FieldDefine;		//用于存储结果
 	FILEDMAP	m_FieldList;		//关系映射
-
-
-	
 };
 
 /// <summary>
@@ -157,16 +157,12 @@ public:
 
 
 //表类
-#define DECLARE_CLASS(name,base) class name:public base { \
+#define DECLARE_TABLE_CLASS(name,base) class name:public base { \
 public:\
 virtual PTable Copy() const{return PTable(new name(*this));}\
-name():base(){Name = #name;}
-
+name():base(){m_strName = #name;}
 
 #define DECLARE_TABLE_CLASS_END() }};
 
-//定义表列内容
-#define DECLARE_FIELD_CLASS(chat_user_table,_Table_)
 
-#define DECLARE_FIELD_CLASS_END() }};
 

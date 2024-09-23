@@ -5,6 +5,7 @@
 #include "LoggerServer.h"
 #include "Process.h"
 #include "ThreadPool.h"
+#include "MySqlClient.h"
 
 
 
@@ -65,49 +66,37 @@ int LoggerTest()
     return 0;
 }
 
-int main()
+DECLARE_TABLE_CLASS(test_mysql, _mysql_table_)
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_id", "VARCHAR", "(15)", PRIMARY_KEY, "", "")
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_qq", "VARCHAR", "(15)", NOT_NULL, "", "")
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_passwd", "VARCHAR", "(15)", NOT_NULL, "", "")
+DECLARE_MYSQL_FIELD(TYPE_TEXT, "user_sex", "TEXT", "", NOT_NULL, "男", "")
+DECLARE_MYSQL_FIELD(TYPE_TEXT, "user_name", "TEXT", "", NOT_NULL, "", "")
+DECLARE_TABLE_CLASS_END()
+
+int MysqlTest()
 {
-    CProcess proclog, procclients;
-    printf("%s(%d):<%s> pid=%d\n", __FILE__,__LINE__, __FUNCTION__, getpid());
-    proclog.SetEntryFunction(CreateLoggerServer,&proclog);
-    int ret = proclog.CreateSubProcess();
-    if (ret != 0) {
-        printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
-        printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
-        return -1;
+    test_mysql test,value;
+    for (int i = 0; i < test.m_FieldDefine.size(); ++i)
+    {
+        printf("%d\n", test.m_FieldDefine[i]->m_uAttr);
     }
-    printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
-    //LoggerTest();
-    printf("%s(%d):<%s> main thread pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
+    printf("%s\n", test.Create().c_str());
+    printf("%s\n", test.Remove(test).c_str());
 
-    //CThread thread(LoggerTest);
-    //thread.Start();
-    //printf("%s(%d):<%s> another thread pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
-    CThreadPool pool;
-    pool.Start();
-    pool.AddTask(LoggerTest);
-    
-    procclients.SetEntryFunction(CreateLoggerClient, &procclients);
-       
-    ret = procclients.CreateSubProcess();
-    if (ret != 0) {
-        printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
-        return -2;
-    }
-    printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
-       
-    usleep(100 * 000);
-    int fd = open("./1.txt", O_RDWR | O_CREAT | O_APPEND);
-        
-    printf("%s(%d):<%s> fd=%d\n", __FILE__, __LINE__, __FUNCTION__, fd);
-
-    if (fd == -1)return -3;
-    ret = procclients.SendFD(fd);
-    printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
-    if (ret != 0)printf("errno:%d msg:%s\n", errno, strerror(errno));
-    write(fd, "edoyun", 6);
-    close(fd);
-    proclog.SendFD(0);
+    value.m_FieldList["user_id"]->LoadFromStr("121650");
+    value.m_FieldList["user_id"]->m_uCondition = SQL_INSERT;
+    printf("insert ret:%s\n",test.Insert(value).c_str());
+    value.m_FieldList["user_id"]->LoadFromStr("664512");
+    value.m_FieldList["user_id"]->m_uCondition = SQL_MODIFY;
+    printf("modify ret:%s\n",test.Modify(value).c_str());
+    printf("query ret:%s\n",test.Query().c_str());
+    printf("drop ret:%s\n",test.Drop().c_str());
     getchar();
     return 0;
+}
+
+int main()
+{
+    return MysqlTest();
 }
