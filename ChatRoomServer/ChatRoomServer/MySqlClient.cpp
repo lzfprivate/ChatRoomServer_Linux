@@ -189,10 +189,11 @@ _mysql_field_::_mysql_field_() : _Field_()
 {
 	m_nType = TYPE_NULL;
 	UnValueType.Double = 0.0;
+	printf("%s(%d):<%s> field construct\n", __FILE__, __LINE__, __FUNCTION__);
 }
 
 _mysql_field_::_mysql_field_(int nType, const CBuffer& name, const CBuffer& type,
-	const CBuffer& size, int attr, const CBuffer& defaultVal, const CBuffer& Check)
+	const CBuffer& size, unsigned attr, const CBuffer& defaultVal, const CBuffer& Check)
 {
 	m_nType = nType;
 	m_strName = name;
@@ -222,7 +223,34 @@ _mysql_field_::_mysql_field_(const _mysql_field_& field): _Field_(field)
 	m_uAttr = field.m_uAttr;
 	m_strDefault = field.m_strDefault;
 	m_strCheck = field.m_strCheck;
-	printf("%s(%d):<%s> input attr = %d reset attr:%d\n", __FILE__, __LINE__, __FUNCTION__, field.m_uAttr, m_uAttr);
+}
+
+_mysql_field_& _mysql_field_::operator=(const _mysql_field_& field)
+{
+	if (&field != this)
+	{
+
+
+		m_nType = field.m_nType;
+		switch (m_nType)
+		{
+		case TYPE_VARCHAR:
+		case TYPE_TEXT:
+		case TYPE_BLOB:
+			UnValueType.String = new CBuffer;
+			*UnValueType.String = *field.UnValueType.String;
+			break;
+		default:
+			break;
+		}
+		m_strName = field.m_strName;
+		m_strType = field.m_strType;
+		m_strSize = field.m_strSize;
+		m_uAttr = field.m_uAttr;
+		m_strDefault = field.m_strDefault;
+		m_strCheck = field.m_strCheck;
+	}
+	return *this;
 }
 
 CBuffer _mysql_field_::Create()

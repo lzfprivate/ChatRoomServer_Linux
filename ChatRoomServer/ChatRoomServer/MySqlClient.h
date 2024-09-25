@@ -29,23 +29,11 @@ enum enPropertyFlag
 class _mysql_field_ : public _Field_
 {
 public:
-	//列属性
-	CBuffer m_strName;			//属性名 姓名 性别 ...
-	CBuffer m_strType;			//属性类型 在SQL语句中的类型字符串
-	CBuffer m_strSize;			//属性占用长度
-	unsigned m_uAttr;			//属性的属性 NULL NOT NULL PRIVATE KEY UNIQUE等
-	CBuffer m_strDefault;		//属性的默认值
-	CBuffer m_strCheck;			//属性的约束条件 大于0 小于0 ...
-
-	unsigned m_uCondition;
-
-	
-
-public:
 	_mysql_field_();
 	virtual ~_mysql_field_() {}
-	_mysql_field_(int nType, const CBuffer& name, const CBuffer& type, const CBuffer& size, int attr, const CBuffer& defaultVal, const CBuffer& Check);
+	_mysql_field_(int nType, const CBuffer& name, const CBuffer& type, const CBuffer& size, unsigned attr, const CBuffer& defaultVal, const CBuffer& Check);
 	_mysql_field_(const _mysql_field_& field);
+	_mysql_field_& operator=(const _mysql_field_& field);
 	virtual CBuffer Create();
 	//从字符串中加载
 	virtual void LoadFromStr(const CBuffer& str);
@@ -135,7 +123,7 @@ virtual PTable Copy() const { return PTable(new name(*this));} \
 name() :base() { m_strName = #name; 
 #define DECLARE_MYSQL_FIELD(nType, strName,strType,strSize,nAttr, strDefault,strCheck) \
 {PFIELD field(new _mysql_field_(nType, strName,strType,strSize,nAttr, strDefault,strCheck));\
-printf("%s(%d):<%s> input attr = %d reset attr:%d\n", __FILE__, __LINE__, __FUNCTION__, nAttr,field->m_uAttr); \
+printf("%s(%d):<%s> input attr = %d reset attr:%d\n", __FILE__, __LINE__, __FUNCTION__, nAttr, field->m_uAttr); \
 m_FieldDefine.emplace_back(field);  m_FieldList[strName] = field; }
 #define DECLARE_TABLE_CLASS_END() }};
 

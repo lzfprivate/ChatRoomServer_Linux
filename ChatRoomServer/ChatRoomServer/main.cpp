@@ -67,7 +67,7 @@ int LoggerTest()
 }
 
 DECLARE_TABLE_CLASS(test_mysql, _mysql_table_)
-DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_id", "VARCHAR", "(15)", PRIMARY_KEY, "", "")
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_id", "VARCHAR", "(15)", PRIMARY_KEY | NOT_NULL|AUTO_INCREAMENT, "", "")
 DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_qq", "VARCHAR", "(15)", NOT_NULL, "", "")
 DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_passwd", "VARCHAR", "(15)", NOT_NULL, "", "")
 DECLARE_MYSQL_FIELD(TYPE_TEXT, "user_sex", "TEXT", "", NOT_NULL, "男", "")
@@ -77,10 +77,6 @@ DECLARE_TABLE_CLASS_END()
 int MysqlTest()
 {
     test_mysql test,value;
-    for (int i = 0; i < test.m_FieldDefine.size(); ++i)
-    {
-        printf("%d\n", test.m_FieldDefine[i]->m_uAttr);
-    }
     printf("%s\n", test.Create().c_str());
     printf("%s\n", test.Remove(test).c_str());
 
