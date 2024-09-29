@@ -40,7 +40,7 @@ int CreateLoggerClient(CProcess* proc) {
     printf("%s(%d):<%s> fd=%d\n", __FILE__,
         __LINE__, __FUNCTION__, fd);
     if (ret != 0) {
-        printf("%s(%d):<%s> errno=%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, errno,strerror(errno));
+        printf("%s(%d):<%s> errno=%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, errno, strerror(errno));
     }
     sleep(1);
     char buf[10] = "";
@@ -67,7 +67,7 @@ int LoggerTest()
 }
 
 DECLARE_TABLE_CLASS(test_mysql, _mysql_table_)
-DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_id", "VARCHAR", "(15)", PRIMARY_KEY | NOT_NULL|AUTO_INCREAMENT, "", "")
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_id", "int", "", PRIMARY_KEY | NOT_NULL|AUTO_INCREAMENT, "", "")
 DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_qq", "VARCHAR", "(15)", NOT_NULL, "", "")
 DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_passwd", "VARCHAR", "(15)", NOT_NULL, "", "")
 DECLARE_MYSQL_FIELD(TYPE_TEXT, "user_sex", "TEXT", "", NOT_NULL, "男", "")
@@ -88,6 +88,25 @@ int MysqlTest()
     printf("modify ret:%s\n",test.Modify(value).c_str());
     printf("query ret:%s\n",test.Query().c_str());
     printf("drop ret:%s\n",test.Drop().c_str());
+
+    CMySqlClient client;
+    KEYVALUE connMsg;
+    connMsg["host"] = "192.168.0.11";
+    connMsg["user"] = "root";
+    connMsg["passwd"] = "123456";
+    connMsg["db"] = "ChatRoom";
+    connMsg["port"] = "3306";
+
+    int ret = client.Connect(connMsg);
+    printf("%s(%d):<%s> mysql server connect ret:%d\n", __FILE__,
+        __LINE__, __FUNCTION__, ret);
+    ret = client.Execute(test.Create());
+    printf("%s(%d):<%s> mysql server execute ret:%d\n", __FILE__,
+        __LINE__, __FUNCTION__, ret);
+
+    ret = client.Execute(test.Drop());
+    printf("%s(%d):<%s> mysql server drop table ret:%d\n", __FILE__,
+        __LINE__, __FUNCTION__, ret);
     getchar();
     return 0;
 }

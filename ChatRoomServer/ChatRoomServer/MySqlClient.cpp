@@ -11,17 +11,23 @@ int CMySqlClient::Connect(const KEYVALUE& loginMsg)
 {
 	if (m_bInit) return -1;
 	MYSQL* ret = mysql_init(&m_db);
-	if (ret == nullptr) return -2;
+	if (ret == nullptr)
+	{
+		printf("%s(%d):<%s> errno=%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, errno, strerror(errno));
+		return -2;
+	}
 	//调用mysqlSDK连接和错误处理
-	ret = mysql_real_connect(&m_db, loginMsg.at("host"), loginMsg.at("user"), loginMsg.at("passwd"),
-		loginMsg.at("db"),atoi(loginMsg.at("port").c_str()), nullptr, 0);
+	ret = mysql_real_connect(&m_db, loginMsg.at("host").c_str(), loginMsg.at("user").c_str(),
+		loginMsg.at("passwd").c_str(),
+		loginMsg.at("db").c_str(),atoi(loginMsg.at("port").c_str()), nullptr, 0);
 	if (ret == nullptr && mysql_errno(&m_db) != 0) {
 		mysql_close(&m_db);
+		printf("%s(%d):<%s> errno=%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, errno, strerror(errno));
 		bzero(&m_db, sizeof(m_db));
 		return -3;
 	}
 	m_bInit = true;
-	if (loginMsg.at("db") > 0)
+	if (loginMsg.at("db").size() > 0)
 	{
 		Execute("use " + loginMsg.at("db") + ";");
 	}
@@ -30,10 +36,13 @@ int CMySqlClient::Connect(const KEYVALUE& loginMsg)
 
 int CMySqlClient::Execute(const CBuffer& sql)
 {
+	printf("%s(%d):<%s> execute sql str:%s\n", __FILE__, __LINE__, __FUNCTION__, sql.c_str());
+
 	//调用MYSQL SDK执行
 	if (!m_bInit) return -1;
-	if (0 != mysql_real_query(&m_db, sql, sql.size()))
+	if (0 != mysql_real_query(&m_db, sql.c_str(), sql.size()))
 	{
+		printf("errno :%d errmsg:%s\n", errno,strerror(errno));
 		return -2;
 	}
 	return 0;
@@ -140,10 +149,9 @@ _mysql_table_::operator const CBuffer() const
 {
 	if (m_strBelongDataBase.size() > 0)
 	{
-		return "'" + m_strBelongDataBase + "'." +
-			"'" + m_strName + "'";
+		return m_strBelongDataBase	+ "." + m_strName;
 	}
-	return 	"'" + m_strName + "'";
+	return 	m_strName;
 }
 
 CBuffer _mysql_table_::Remove(const _Table_& table)
@@ -256,7 +264,7 @@ _mysql_field_& _mysql_field_::operator=(const _mysql_field_& field)
 CBuffer _mysql_field_::Create()
 {
 	//名称 类型 属性 长度
-	CBuffer sql = "'" + m_strName + "' " + m_strType + m_strSize + " ";
+	CBuffer sql = m_strName + " " + m_strType + m_strSize + " ";
 	if (m_uAttr & NOT_NULL)
 	{
 		sql += "NOT NULL ";
@@ -275,7 +283,7 @@ CBuffer _mysql_field_::Create()
 	}
 	if (m_uAttr & AUTO_INCREAMENT)
 	{
-		sql += "AUTO_INCREAMENT ";
+		sql += "AUTO_INCREMENT ";
 	}
 	return sql;
 }
@@ -319,7 +327,7 @@ CBuffer _mysql_table_::Create()
 	*
 	*/
 	
-	CBuffer sql = "CREATE TABLE IF NOT EXIST " + (CBuffer)*this + "(\r\n";
+	CBuffer sql = "CREATE TABLE  IF NOT EXISTS " + (CBuffer)*this + " (\r\n";
 	bool bFirst = true;
 	for (int i = 0; i < m_FieldDefine.size(); ++i)
 	{
@@ -329,10 +337,9 @@ CBuffer _mysql_table_::Create()
 			sql += ",\r\n";
 		}
 		sql += m_FieldDefine[i]->Create();
-		printf("attr:%d-----------------\n", m_FieldDefine[i]->m_uAttr);
 		if (m_FieldDefine[i]->m_uAttr & PRIMARY_KEY)
 		{
-			sql += ",\r\nPRIMARY KEY ('" + m_FieldDefine[i]->m_strName + "')";
+			sql += ",\r\nPRIMARY KEY (" + m_FieldDefine[i]->m_strName + ")";
 		}
 		if (m_FieldDefine[i]->m_uAttr & UNIQUE)
 		{
@@ -357,12 +364,8 @@ CBuffer _mysql_table_::Insert(const _Table_& table)
 	bool bFirst = true;
 	for (int i = 0; i < table.m_FieldDefine.size(); ++i)
 	{
-		printf("%s(%d):<%s> table attr = %d\n"
-			, __FILE__, __LINE__, __FUNCTION__, 
-			table.m_FieldDefine[i]->m_uAttr);
 		if (table.m_FieldDefine[i]->m_uCondition & SQL_INSERT)
 		{
-			printf("%s(%d):<%s> insert table num = %d\n", __FILE__, __LINE__, __FUNCTION__, table.m_FieldDefine.size());
 			if (!bFirst) {
 				sql += ",";
 			}
@@ -416,7 +419,7 @@ CBuffer _mysql_table_::Query(const CBuffer& condition)
 CBuffer _mysql_table_::Modify(const _Table_& table)
 {
 	//UPDATE 表全名 SET 列=值1 ... WHERE ()
-	CBuffer sql = "UPDATE " + (CBuffer)*this + "SET ";
+	CBuffer sql = "UPDATE " + (CBuffer)*this + " SET ";
 	for (int i = 0; i < table.m_FieldDefine.size(); ++i)
 	{
 		if (table.m_FieldDefine[i]->m_uAttr & SQL_MODIFY)

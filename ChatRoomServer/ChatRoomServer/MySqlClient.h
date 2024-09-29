@@ -123,7 +123,6 @@ virtual PTable Copy() const { return PTable(new name(*this));} \
 name() :base() { m_strName = #name; 
 #define DECLARE_MYSQL_FIELD(nType, strName,strType,strSize,nAttr, strDefault,strCheck) \
 {PFIELD field(new _mysql_field_(nType, strName,strType,strSize,nAttr, strDefault,strCheck));\
-printf("%s(%d):<%s> input attr = %d reset attr:%d\n", __FILE__, __LINE__, __FUNCTION__, nAttr, field->m_uAttr); \
 m_FieldDefine.emplace_back(field);  m_FieldList[strName] = field; }
 #define DECLARE_TABLE_CLASS_END() }};
 
