@@ -115,6 +115,7 @@ int CLocalSocket::Send(const CBuffer& buf)
         if (iLen == -1)
         {
             printf("%s(%d):<%s> pid=%d errno:%d errmsg:%s\n", __FILE__, __LINE__, __FUNCTION__, getpid(), errno, strerror(errno));
+            return -1;
         }
         index += iLen;
     }

@@ -10,12 +10,14 @@
 
 
 int CreateLoggerServer(CProcess* proc) {
-    printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
     int ret = -1;
     CLoggerServer server;
-    printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
     ret = server.Start();
-    printf("%s(%d):<%s> logserver start ret:%d pid=%d\n", __FILE__, __LINE__, __FUNCTION__, ret, getpid());
+    if (ret != 0)
+    {
+        printf("%s(%d):<%s> logserver start ret:%d pid=%d\n", __FILE__, __LINE__, __FUNCTION__, ret, getpid());
+        return -1;
+    }
     int fd = 0;
     while (1)
     {
@@ -66,17 +68,11 @@ int LoggerTest()
     return 0;
 }
 
-DECLARE_TABLE_CLASS(test_mysql, _mysql_table_)
-DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_id", "int", "", PRIMARY_KEY | NOT_NULL|AUTO_INCREAMENT, "", "")
-DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_qq", "VARCHAR", "(15)", NOT_NULL, "", "")
-DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_passwd", "VARCHAR", "(15)", NOT_NULL, "", "")
-DECLARE_MYSQL_FIELD(TYPE_TEXT, "user_sex", "TEXT", "", NOT_NULL, "男", "")
-DECLARE_MYSQL_FIELD(TYPE_TEXT, "user_name", "TEXT", "", NOT_NULL, "", "")
-DECLARE_TABLE_CLASS_END()
+
 
 int MysqlTest()
 {
-    test_mysql test,value;
+    /*test_mysql test,value;
     printf("%s\n", test.Create().c_str());
     printf("%s\n", test.Remove(test).c_str());
 
@@ -108,10 +104,40 @@ int MysqlTest()
     printf("%s(%d):<%s> mysql server drop table ret:%d\n", __FILE__,
         __LINE__, __FUNCTION__, ret);
     getchar();
-    return 0;
+    return 0;*/
+}
+
+void epoll_test()
+{
+    sleep(1);
+    int server = socket(PF_LOCAL, SOCK_STREAM, 0);
+    struct sockaddr_un addr;
+    addr.sun_family = PF_LOCAL;
+    strcpy(addr.sun_path, "/root/projects/ChatRoomServer/bin/x64/Debug/log/logger.sock");
+    socklen_t addrLen = sizeof(struct sockaddr_un);
+    if (-1 == connect(server, (sockaddr*)&addr, addrLen))
+    {
+        printf("%s(%d):<%s> client connect errno:%d errmsg:%s\n", __FILE__,
+            __LINE__, __FUNCTION__, errno,strerror(errno));
+    }
+    usleep(100000);
+    if (-1 == send(server, "hello", 6, 0))
+    {
+        printf("%s(%d):<%s> client send errno:%d errmsg:%s\n", __FILE__,
+            __LINE__, __FUNCTION__, errno, strerror(errno));
+    }
+    getchar();
+
 }
 
 int main()
 {
-    return MysqlTest();
+    CProcess procServer;
+    int ret = procServer.SetEntryFunction(CreateLoggerServer, &procServer);
+    ret = procServer.CreateSubProcess();
+    LoggerTest();
+    procServer.SendFD(0);
+
+    getchar();
+    return 0;
 }

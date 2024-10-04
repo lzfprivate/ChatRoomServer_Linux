@@ -130,15 +130,12 @@ _mysql_table_::_mysql_table_()
 
 _mysql_table_::_mysql_table_(const _mysql_table_& table)
 {
-	printf("mysql table copy construct entry======\n");
 	m_strBelongDataBase = table.m_strBelongDataBase;
 	m_strName = table.m_strName;
 	for (size_t i = 0; i < table.m_FieldDefine.size(); i++)
 	{
 		PFIELD field = PFIELD(new _mysql_field_(*(_mysql_field_*)table.m_FieldDefine[i].get()));
 		m_FieldDefine.push_back(field);
-		printf("copy construct input attr:%d======\n", table.m_FieldDefine[i]->m_uAttr);
-		printf("copy construct output attr:%d======\n", m_FieldDefine[i]->m_uAttr);
 		m_FieldList[field->m_strName] = field;
 	}
 }

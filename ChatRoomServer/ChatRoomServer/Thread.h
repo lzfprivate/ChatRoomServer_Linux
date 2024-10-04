@@ -1,6 +1,9 @@
 #pragma once
 #include <pthread.h>
 #include <unordered_map>
+#include <signal.h>
+#include <unistd.h>
+
 #include "FuncionBase.h"
 
 
@@ -73,6 +76,7 @@ private:
 	//线程功能执行
 	int ThreadFunction();
 
+	static void SignalAction(int sigNo, siginfo_t* info, void* context);
 
 private:
 	CFunctionBase* m_function;			//连接响应函数

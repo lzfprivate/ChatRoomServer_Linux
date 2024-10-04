@@ -27,8 +27,11 @@ private:
     //组织数据回复
     CBuffer MakeHttpResponse(int ret);
 
-
+    //获取文件夹下的文件
     std::vector<CBuffer> GetFilesInFolder(const CBuffer& folderPath);
+
+    //处理登录请求
+    int DealLoginRequest(CSockBase* client,const CBuffer& buff);
 
 
 private:

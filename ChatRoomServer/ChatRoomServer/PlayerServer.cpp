@@ -9,18 +9,19 @@
 using namespace std;
 using namespace std::placeholders;
 
-const char* md5_key = "";
+const char* md5_key = "YARI\\a3QU>5DOKmYvAKTrf23s7EYtD_cwouUAa:ueT_Q`>rme[_\\Ui<RGr4";
 
 #ifndef Err_Return(ret,retval) 
 #define Err_Return(ret,retval) if(ret != 0) {TRACEE("errno:%d,errmsg:%s",errno,strerror(errno)); return retval;}
 #endif // !Err_Return(ret,retval)
 
 
-DECLARE_TABLE_CLASS(Login_user_mysql, _mysql_table_)
-DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_id", "varchar", "(15)", PRIMARY_KEY, "", "")
-DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_account", "varchar", "(15)", NOT_NULL, "", "")
-DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_passwd", "varchar", "(15)", NOT_NULL, "", "")
-DECLARE_MYSQL_FIELD(TYPE_BOOL, "user_sex", "boolean", "", NOT_NULL, "男", "")
+DECLARE_TABLE_CLASS(TableUsers, _mysql_table_)
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_id", "int", "", PRIMARY_KEY | NOT_NULL | AUTO_INCREAMENT, "", "")
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_account", "VARCHAR", "(15)", NOT_NULL, "", "")
+DECLARE_MYSQL_FIELD(TYPE_VARCHAR, "user_passwd", "VARCHAR", "(15)", NOT_NULL, "", "")
+DECLARE_MYSQL_FIELD(TYPE_TEXT, "user_sex", "TEXT", "", NOT_NULL, "男", "")
+DECLARE_MYSQL_FIELD(TYPE_TEXT, "user_name", "TEXT", "", NOT_NULL, "", "")
 DECLARE_TABLE_CLASS_END()
 
 CPlayerServer::CPlayerServer(unsigned nSize):
@@ -56,16 +57,16 @@ int CPlayerServer::BusinessProcess(CProcess* process)
 		return -1;
 	}
 	KEYVALUE args;
-	args["host"] = "127.0.0.1";
-	args["user"] = "张三";
-	args["passwd"] = "12345678";
-	args["db"] = "videoserver";
+	args["host"] = "192.168.0.11";
+	args["user"] = "root";
+	args["passwd"] = "123456";
+	args["db"] = "ChatRoom";
 	args["port"] = "3306";
 	int ret = -1;
 	ret = m_db->Connect(args);
 	Err_Return(ret, -1);
 
-	Login_user_mysql tableUser;
+	TableUsers tableUser;
 	ret = m_db->Execute(tableUser.Create());
 	Err_Return(ret, -2);
 	ret = m_epoll.Create(m_iCount);
@@ -137,8 +138,9 @@ int CPlayerServer::Recv(CSockBase* client, const CBuffer& buffer)
 	std::vector<CBuffer> fileList = GetFilesInFolder("./");
 	switch (frame.m_iFrameFunc)
 	{
-	case 1:
-		ret = frame.Encode(0, CBuffer());
+	case 1:	
+		DealLoginRequest(client, frame.m_bufFrame);
+		
 		break;
 	case 2:
 	case 3:
@@ -219,7 +221,7 @@ int CPlayerServer::DecodeHttpRequest(const CBuffer& request)
 			CBuffer user = urlParser["user"];
 			CBuffer sign = urlParser["sign"];
 
-			Login_user_mysql loginDb;
+			TableUsers loginDb;
 			Result result;
 			CBuffer sql = loginDb.Query("user_name=\"" + user + "\"");
 			ret = m_db->Execute(sql, result, loginDb);
@@ -312,4 +314,84 @@ std::vector<CBuffer> CPlayerServer::GetFilesInFolder(const CBuffer& folderPath)
 
 	return fileList;
 
-} 
+}
+int CPlayerServer::DealLoginRequest(CSockBase* client,const CBuffer& buff)
+{
+	CFrame frame;
+	int ret = 0;
+	//解析md5
+
+	char* temp = (char*)buff.c_str();
+	int* len = (int*)temp;
+	temp += sizeof(int);					//用户名长度
+
+	CBuffer bufAccount(*len);
+	memcpy((void*)bufAccount.c_str(), temp, *len);
+	temp += (*len);							//用户名
+
+	len = (int*)temp;						
+	temp += sizeof(int);					//时间字符串长度
+
+	CBuffer bufTime(*len);
+	memcpy((void*)bufTime.c_str(), temp, *len);
+	temp += (*len);							//时间字符串
+
+	len = (int*)temp;
+	temp += sizeof(int);					//噪声值长度
+
+	CBuffer bufSalt(*len);
+	memcpy((void*)bufSalt.c_str(), temp, *len);
+	temp += (*len);							//噪声值字符串
+
+	CBuffer bufPrivate(*len);
+	memcpy((void*)bufPrivate.c_str(), temp, *len);
+	temp += (*len);							//私有字符串
+
+	CBuffer bufMd5Recv(*len);
+	memcpy((void*)bufMd5Recv.c_str(), temp, *len);
+	temp += (*len);							//md5值
+
+	CBuffer bufCheck;
+
+	int index = 0;
+	do
+	{
+		TableUsers loginDb;
+		Result result;
+		CBuffer sql = loginDb.Query("user_account=" + bufAccount + "");
+		ret = m_db->Execute(sql, result, loginDb);
+		if (ret != 0)
+		{
+			index = -1;
+		}
+		if (result.size() <= 0)
+		{
+			index = -2;
+		}
+		if (result.size() > 1)
+		{
+			index = -3;
+		}
+		auto user_msg = result.front();
+		CBuffer bufPasswd = *user_msg->m_FieldList["user_passwd"]->UnValueType.String;
+
+		CBuffer encodeStr = bufAccount + bufTime + bufSalt + bufPasswd + md5_key;
+		//通过md5加密
+		CBuffer md5 = CMd5Encode::Encode(encodeStr);
+		if (md5 == bufMd5Recv)
+		{
+			bufCheck = "1";
+		}
+		else {
+			bufCheck = "0";
+			index = -4;
+		}
+	} while (0);
+
+	frame.Encode(0, bufCheck);
+	if (0 != client->Send(frame.m_bufTotal))
+	{
+		index = -5;
+	}
+	return index;
+}

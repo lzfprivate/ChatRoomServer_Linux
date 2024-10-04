@@ -31,6 +31,13 @@ public:
 	{
 		return &m_data;
 	}
+
+	void* Data() const
+	{
+		return m_data.ptr;
+	}
+
+
 private:
 	epoll_data_t m_data;
 };

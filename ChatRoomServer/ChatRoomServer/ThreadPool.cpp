@@ -73,7 +73,7 @@ int CThreadPool::DispatchTask()
             {
                 if (epEvents[i].data.ptr == m_server) {
                     //客户端接入
-                    CSockBase* client = new CLocalSocket();
+                    CSockBase* client = nullptr;
                     client->InitSocket(CSockParam(m_bufSockPath, 0));
                     client->Link();
                 }

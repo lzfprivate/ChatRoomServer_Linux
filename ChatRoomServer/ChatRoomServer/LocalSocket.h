@@ -82,7 +82,6 @@ public:
 			close(fd);
 		}
 		if (m_param.m_iAttr & EnServer) {
-			printf("%s(%d):<%s> release local net path:%s\n", __FILE__, __LINE__, __FUNCTION__, m_param.m_bufIp.c_str());
 			unlink(m_param);
 		}
 	}

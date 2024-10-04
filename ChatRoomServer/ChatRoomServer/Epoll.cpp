@@ -72,6 +72,7 @@ int CEpoll::Create(unsigned int nSize)
 int CEpoll::Add(int fd, const CEpoll_Data& data, unsigned op)
 {
 	if (m_epoll == -1) return -1;
+	printf("%d,%p=============================\n", op, data.Data());
 	epoll_event ep_event{ op ,data };
 	int ret = epoll_ctl(m_epoll, EPOLL_CTL_ADD, fd, &ep_event);
 	return ret;
